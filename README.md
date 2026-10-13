@@ -1,0 +1,31 @@
+# The Four Nodes · búsqueda comunitaria de mascotas
+
+Proyecto final de Sistemas Distribuidos 2027-1 de la FI-UNAM. Una persona publica el extravío de su mascota y comparte el enlace del reporte; otras personas pueden registrar hallazgos y seguir un municipio para recibir alertas. El alcance y las decisiones están en [docs/PRD.md](docs/PRD.md).
+
+## Equipo
+
+1. **Oscar Ivan Montiel Juarez** — [@Montiel-Oscar](https://github.com/Montiel-Oscar)
+2. **Luisa María Segura Cedeño** — [@LuisaCedeno](https://github.com/LuisaCedeno)
+3. **Cecilia Ximena Solis Cisneros** — [@CeciliaXimenaSolisCisneros](https://github.com/CeciliaXimenaSolisCisneros)
+4. **Amy Valentina Veraza García** — [@Amyv19](https://github.com/Amyv19)
+
+## Primera entrega: `01-monolito`
+
+La rama `main` contiene la documentación. La rama `01-monolito` contiene una sola aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. El primer flujo a completar es **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito puede usar una cuenta de demostración; la separación en servicios vendrá después.
+
+La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
+
+## Levantar la aplicación
+
+En la rama `01-monolito`, con Docker y Docker Compose instalados:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/docs` para la API y `http://localhost:8000/health/ready` para comprobar la conexión con PostgreSQL. El archivo `.env` es local y no se sube a GitHub. Para detener la aplicación, usar `Ctrl+C` y después `docker compose down`; el volumen de la base conserva los datos.
+
+## Ramas del proyecto
+
+`main` → documentación y versión estable. `01-monolito` → primera entrega ejecutable. Más adelante: `02-separacion`, `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de la primera entrega parten de `01-monolito` y vuelven a ella mediante revisión del equipo.
