@@ -2,7 +2,7 @@
 
 ## Antes de comenzar
 
-Oscar crea el repositorio y comparte el enlace. Cada integrante acepta la invitación de GitHub, configura su **propio** nombre y correo de Git, lee [el PRD](PRD.md) y revisa [el reparto](REPARTO_01_MONOLITO.md). Los commits de cada persona deben quedar con su identidad: el profesor revisará el historial.
+Oscar comparte el enlace del repositorio y, en **Settings → Collaborators**, invita a [@LuisaCedeno](https://github.com/LuisaCedeno), [@CeciliaXimenaSolisCisneros](https://github.com/CeciliaXimenaSolisCisneros), [@Amyv19](https://github.com/Amyv19) y al profesor [@OscarRuiz21](https://github.com/OscarRuiz21), como exige el README del curso. Cada integrante acepta su invitación, configura su **propio** nombre y correo de Git, lee [el PRD](PRD.md) y revisa [el reparto](REPARTO_01_MONOLITO.md). Los commits de cada persona deben quedar con su identidad: el profesor revisará el historial.
 
 ## Con GitHub Desktop
 

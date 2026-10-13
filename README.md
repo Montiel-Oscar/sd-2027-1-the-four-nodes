@@ -13,6 +13,8 @@ Proyecto final de Sistemas Distribuidos 2027-1 de la FI-UNAM. Una persona public
 
 La rama `main` contiene la documentación. La rama `01-monolito` contiene una sola aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. El primer flujo a completar es **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito puede usar una cuenta de demostración; la separación en servicios vendrá después.
 
+**Entrega del curso:** sábado 17 de octubre de 2026, antes de las 07:00. El equipo comparte la liga del repositorio en su comentario de la Discussion #44 cuando la rama `01-monolito` tenga el flujo principal funcionando.
+
 La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
 
 ## Levantar la aplicación
