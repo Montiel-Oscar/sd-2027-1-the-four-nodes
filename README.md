@@ -17,6 +17,13 @@ La rama `main` contiene la documentación. La rama `01-monolito` contiene una so
 
 La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
 
+## Estado del monolito · 13 de octubre de 2026
+
+- **Base común:** `01-monolito` ya levanta FastAPI y PostgreSQL con Docker Compose. Las rutas de salud funcionan; el flujo de publicación completo todavía no está integrado.
+- **Oscar:** implementó reportes de extravío, consulta pública, evento pendiente e idempotencia en `trabajo/oscar-extravios`. Está en la [solicitud de integración #1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1), aún en borrador porque necesita el módulo de mascotas de Luisa.
+- **Luisa, Cecilia y Amy:** pueden trabajar **en paralelo**, cada una desde `01-monolito` en la rama y carpeta indicadas en el [reparto](docs/REPARTO_01_MONOLITO.md). Luisa implementa primero el contrato de `app/pets/service.py` para desbloquear la prueba real de reportes; Cecilia prepara la identidad de demostración y Amy la interfaz al mismo tiempo.
+- **Para integrar:** revisar e integrar identidad y mascotas, después reportes y por último la interfaz. Entonces probar publicación, reintento, enlace público y persistencia después de reiniciar los contenedores.
+
 ## Levantar la aplicación
 
 En la rama `01-monolito`, con Docker y Docker Compose instalados:
