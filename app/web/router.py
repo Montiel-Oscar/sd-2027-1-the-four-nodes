@@ -1,17 +1,28 @@
+﻿from pathlib import Path
+from uuid import UUID
+
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 
 router = APIRouter(tags=["web"])
+STATIC = Path(__file__).parent / "static"
 
 
-@router.get("/", response_class=HTMLResponse)
-def home() -> str:
-    return """<!doctype html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Four Nodes</title>
-<style>body{font-family:system-ui,sans-serif;max-width:44rem;margin:4rem auto;padding:0 1rem;line-height:1.5}a{color:#155e75}</style>
-</head>
-<body><h1>The Four Nodes</h1><p>Búsqueda comunitaria de mascotas.</p>
-<p>El equipo está construyendo el primer flujo: publicar un extravío.</p>
-<p><a href="/docs">Ver la documentación de la API</a></p></body></html>"""
+@router.get("/", response_class=FileResponse)
+def home():
+    return FileResponse(STATIC / "index.html")
+
+
+@router.get("/reportes/extravios/{report_id}", response_class=FileResponse)
+def public_report(report_id: UUID):
+    return FileResponse(STATIC / "report.html")
+
+
+@router.get("/web/app.js", include_in_schema=False)
+def javascript():
+    return FileResponse(STATIC / "app.js", media_type="text/javascript")
+
+
+@router.get("/web/style.css", include_in_schema=False)
+def stylesheet():
+    return FileResponse(STATIC / "style.css", media_type="text/css")

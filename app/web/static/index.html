@@ -1,0 +1,25 @@
+﻿<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Publicar extravío · The Four Nodes</title><link rel="stylesheet" href="/web/style.css"><script src="/web/app.js" defer></script></head>
+<body><header><a href="/">The Four Nodes <span>· comunidad</span></a><a href="/docs">API</a></header>
+<main><p class="eyebrow">BÚSQUEDA COMUNITARIA DE MASCOTAS</p><h1>Ayudemos a que vuelva a casa.</h1><p>Publica dónde viste por última vez a tu mascota y comparte su reporte con tu comunidad.</p>
+<p class="notice">Primera entrega · Usamos una cuenta de demostración compartida. La información del reporte será pública.</p>
+<form id="publish-form">
+<fieldset><legend>1. Cuéntanos de tu mascota</legend>
+<label>Nombre<input name="name" required maxlength="100" autocomplete="off" placeholder="Ej. Luna"></label>
+<label>Especie<select name="species" required><option value="">Selecciona una especie</option><option>perro</option><option>gato</option><option>ave</option><option>otro</option></select></label>
+<label class="wide">Características para reconocerla<textarea name="traits" required maxlength="500" rows="3" placeholder="Color, tamaño, collar o señas particulares"></textarea></label></fieldset>
+<fieldset><legend>2. ¿Dónde y cuándo la viste?</legend>
+<label>Última vez vista<input type="datetime-local" name="seen_at" required></label>
+<label>Municipio o alcaldía<input name="municipality" required maxlength="120" placeholder="Ej. Coyoacán"></label>
+<label>Colonia<input name="neighborhood" required maxlength="120"></label>
+<label>Punto de referencia<input name="landmark" required maxlength="250" placeholder="Ej. Cerca del parque"></label></fieldset>
+<fieldset><legend>3. Contacto público (opcional)</legend>
+<label class="check wide"><input type="checkbox" name="show_phone"> Quiero mostrar mi teléfono en el reporte público.</label>
+<label>Teléfono<input type="tel" name="public_phone" maxlength="32" autocomplete="tel" disabled></label>
+<p>Solo se enviará y mostrará si autorizas compartirlo.</p></fieldset>
+<div id="status" role="status" aria-live="polite" tabindex="-1"></div>
+<button type="submit">Publicar extravío</button><p class="hint">Si la conexión falla, vuelve a intentarlo sin cambiar los datos para evitar duplicados.</p>
+</form>
+<section id="success" hidden aria-labelledby="success-title"><h2 id="success-title">Tu reporte está publicado</h2><p>Comparte este enlace para que más personas puedan ayudar.</p><a id="public-link"></a><p><button id="copy-link" type="button">Copiar enlace</button></p></section>
+</main><footer>The Four Nodes · Una comunidad que ayuda a encontrar.</footer></body></html>
