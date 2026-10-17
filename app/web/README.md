@@ -33,3 +33,16 @@ No se verificó el flujo completo en navegador ni la persistencia: esta base aú
 7. Abrir un UUID inexistente y comprobar el error; reiniciar contenedores y verificar que el enlace publicado siga funcionando.
 
 Para entregar, publicar `trabajo/amy-web` y abrir una solicitud hacia `01-monolito` para revisión del equipo.
+
+## Actualización visual: fotografías y reporte guiado
+
+La portada utiliza fotografías ilustrativas guardadas en `static/photos/`, descargadas de Unsplash:
+- `golden.jpg`: archivo de origen https://images.unsplash.com/photo-1552053831-71594a27632d.
+- `dog.jpg`: archivo de origen https://images.unsplash.com/photo-1587300003388-59208cc962cb.
+
+Son imágenes de ambientación; no representan mascotas reportadas. No hay carga de fotos ni cambios al contrato de API.
+
+El formulario tiene cuatro pasos, validación por etapa, selección visual de especie, consejos, progreso y vista previa. Las animaciones respetan `prefers-reduced-motion`.
+
+Verificación con Edge/Playwright: fotografías cargadas, sin desbordamiento en 390/768/1440 px, campos obligatorios por paso, consentimiento de teléfono, vista previa y reintento simulado conservando la clave de idempotencia. Dos pruebas de rutas web aprobadas.
+

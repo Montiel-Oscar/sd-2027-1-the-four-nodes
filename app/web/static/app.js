@@ -83,3 +83,75 @@ document.querySelector("#copy-link").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(shareUrl); say("Enlace copiado."); }
   catch { say(`Copia este enlace: ${shareUrl}`); }
 });
+
+// Guided report: validate each step before moving forward.
+if (form) {
+  form.noValidate = true;
+  const panels = [...form.querySelectorAll('.wizard-panel')];
+  const tabs = [...form.querySelectorAll('[data-go]')];
+  const next = document.querySelector('#wizard-next');
+  const back = document.querySelector('#wizard-back');
+  const publish = form.querySelector('[type=submit]');
+  const captions = ['Conozcamos a tu mascota', 'Su última ubicación', 'Cómo pueden contactarte', 'Todo listo para compartir'];
+  let step = 0;
+  function validatePanel(index) {
+    for (const field of panels[index].querySelectorAll('input,select,textarea')) {
+      if (field.disabled) continue;
+      if (field.type !== 'checkbox' && field.type !== 'datetime-local') field.value = field.value.trim();
+      if (!field.reportValidity()) return false;
+    }
+    return true;
+  }
+  function review() {
+    const f = form.elements;
+    document.querySelector('#review-name').textContent = f.name.value || 'Tu mascota';
+    document.querySelector('#review-traits').textContent = f.traits.value;
+    const list = document.querySelector('#review-details');
+    list.replaceChildren();
+    for (const [label,value] of [['Mascota',f.species.value],['Vista por última vez',f.seen_at.value ? new Date(f.seen_at.value).toLocaleString('es-MX') : ''],['Zona',`${f.neighborhood.value}, ${f.municipality.value}`],['Referencia',f.landmark.value],['Contacto',f.show_phone.checked ? f.public_phone.value : 'Tu teléfono no se publicará']]) {
+      const dt = document.createElement('dt'); dt.textContent = label;
+      const dd = document.createElement('dd'); dd.textContent = value;
+      list.append(dt,dd);
+    }
+  }
+  function showStep(target, focus = true) {
+    step = target;
+    panels.forEach((panel,i) => { panel.hidden = i !== step; });
+    tabs.forEach((tab,i) => {
+      if (i === step) tab.setAttribute('aria-current','step'); else tab.removeAttribute('aria-current');
+      tab.classList.toggle('complete', i < step);
+    });
+    back.hidden = step === 0;
+    next.hidden = step === panels.length-1;
+    publish.hidden = step !== panels.length-1;
+    const percent = Math.round((step+1)/panels.length*100);
+    document.querySelector('#progress-fill').style.width = percent+'%';
+    document.querySelector('.progress-track').setAttribute('aria-valuenow',String(percent));
+    document.querySelector('#step-percent').textContent = percent+'%';
+    const caption = document.querySelector('#step-caption');
+    caption.textContent = `${step+1} de ${panels.length} · ${captions[step]}`;
+    if (step === panels.length-1) review();
+    if (focus) { caption.tabIndex = -1; caption.focus({preventScroll:true}); form.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',block:'start'}); }
+  }
+  function go(target) {
+    if (target > step) {
+      for (let i=step;i<target;i++) {
+        showStep(i,false);
+        if (!validatePanel(i)) return;
+      }
+    }
+    showStep(target);
+  }
+  next.addEventListener('click',()=>go(step+1));
+  back.addEventListener('click',()=>go(step-1));
+  tabs.forEach(tab=>tab.addEventListener('click',()=>go(Number(tab.dataset.go))));
+  form.addEventListener('keydown',event=> {
+    if (event.key === 'Enter' && event.target.tagName === 'INPUT' && step < panels.length-1) { event.preventDefault(); go(step+1); }
+  });
+  const choices = [...form.querySelectorAll('[data-species]')];
+  function syncSpecies() { choices.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.species === form.elements.species.value))); }
+  choices.forEach(button=>button.addEventListener('click',()=> {form.elements.species.value=button.dataset.species; syncSpecies();}));
+  form.elements.species.addEventListener('change',syncSpecies);
+  syncSpecies();
+  showStep(0,false);
+}

@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -26,3 +26,11 @@ def javascript():
 @router.get("/web/style.css", include_in_schema=False)
 def stylesheet():
     return FileResponse(STATIC / "style.css", media_type="text/css")
+
+
+@router.get("/web/photos/{filename}", include_in_schema=False)
+def photo(filename: str):
+    from fastapi import HTTPException
+    if filename not in {"golden.jpg", "dog.jpg"}:
+        raise HTTPException(status_code=404, detail="Fotografia no encontrada")
+    return FileResponse(STATIC / "photos" / filename, media_type="image/jpeg")
