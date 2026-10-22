@@ -14,6 +14,7 @@ from app.core.db import Base, get_session
 from app.reports import service
 from app.reports.models import MissingPetReport, PendingReportEvent
 from app.reports.router import router
+from app.web.router import router as web_router
 
 
 class ExamplePet(Base):
@@ -57,6 +58,7 @@ def setup(monkeypatch):
 
     monkeypatch.setattr(service, "_resolve_pet", fake_resolve)
     app = FastAPI()
+    app.include_router(web_router)
     app.include_router(router)
     app.dependency_overrides[get_session] = session_dependency
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -89,7 +91,8 @@ def test_publication_retry_and_public_link(setup):
     repeated = client.post("/api/reportes/extravios", json=payload(), headers=headers)
     assert repeated.status_code == 201
     assert repeated.json() == first.json()
-    assert client.get(first.json()["public_url"]).json() == first.json()
+    assert client.get(first.json()["public_url"]).status_code == 200
+    assert client.get(f'/api/reportes/extravios/{first.json()["id"]}').json() == first.json()
     assert count(factory, ExamplePet) == 1
     assert count(factory, MissingPetReport) == 1
     assert count(factory, PendingReportEvent) == 1
@@ -107,7 +110,7 @@ def test_key_conflict_and_phone_consent(setup):
     first = client.post("/api/reportes/extravios", json=data, headers=headers)
     assert first.status_code == 201
     assert first.json()["public_phone"] is None
-    assert client.get(first.json()["public_url"]).json()["public_phone"] is None
+    assert client.get(f'/api/reportes/extravios/{first.json()["id"]}').json()["public_phone"] is None
     changed = client.post(
         "/api/reportes/extravios", json=payload(landmark="Otra calle"), headers=headers
     )

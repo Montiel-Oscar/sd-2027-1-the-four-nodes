@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/reportes", tags=["reportes"])
 def _public(report: MissingPetReport, request: Request) -> MissingPetPublic:
     return MissingPetPublic(
         id=report.id,
-        public_url=str(request.url_for("get_missing_pet", report_id=report.id)),
+        public_url=str(request.url_for("public_report", report_id=report.id)),
         pet=PetDetails(
             name=report.pet_name, species=report.pet_species, traits=report.pet_traits
         ),
