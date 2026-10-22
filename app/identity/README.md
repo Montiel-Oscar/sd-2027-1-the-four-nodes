@@ -5,3 +5,7 @@
 El [PRD](../../docs/PRD.md) permite una cuenta de demostración en esta rama. Revisa `app/core/auth.py` y deja una dependencia `get_actor_id` estable para Oscar y Luisa. Si añades registro e inicio de sesión, deben seguir siendo parte de **esta única aplicación y base**; no crees otro servicio todavía.
 
 **Entregable mínimo:** un actor de demostración consistente y una prueba que muestre que las operaciones privadas reciben su ID. Documenta cómo sustituirlo por autenticación real. Si completas registro e inicio de sesión, añade pruebas de contraseña incorrecta y de acceso sin sesión. Publica tu rama y solicita integración hacia `01-monolito`.
+
+## Estado integrado
+
+No se recibió una rama o solicitud de integración de Cecilia para esta etapa. Se completó el mínimo con el actor fijo de `app/core/auth.py`, `GET /api/usuarios/me` y `tests/test_identity.py`. Toda publicación y ficha usa `get_actor_id`; las cuentas reales, credenciales y tokens quedan para las ramas posteriores del PRD. Esta cuenta de demostración es compartida por todos los visitantes locales.
