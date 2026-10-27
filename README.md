@@ -41,3 +41,5 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 ## Primera versión distribuida: `02-separacion`
 
 Esta rama inicia la separación entre reportes y alertas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos de API y eventos](docs/CONTRATOS_02_SEPARACION.md) y la [guía de trabajo](docs/COMO_TRABAJAR_02.md) definen qué debe implementar cada integrante y cómo integrar sus Pull Requests. **Es una rama en desarrollo**: `01-monolito` sigue siendo la versión funcional hasta que pasen las pruebas de aceptación de la nueva etapa.
+
+Oscar ya publicó su parte de reportes y outbox en el [PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4). Luisa, Ceci y Amy pueden trabajar en paralelo desde `02-separacion` siguiendo las instrucciones de su carpeta y los contratos comunes. El servicio de alertas, el login y las nuevas pantallas aún no están integrados en esta rama.
