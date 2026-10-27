@@ -17,6 +17,44 @@ Las cuatro funciones del PRD deben funcionar: registrar mascotas, publicar extra
 
 El reparto es por **archivos**, no por orden de inicio. Todos pueden programar en paralelo con [los contratos](CONTRATOS_02_SEPARACION.md). Oscar no debe cambiar `app/alerts/` ni `app/core/auth.py`; Luisa no debe cambiar `app/reports/`; Ceci no debe cambiar reportes ni alertas; Amy no debe cambiar la API. Cada integrante mantiene sus commits con su propia identidad de Git. Si una ruta o campo necesita cambiar, acuerden el contrato antes de modificarlo.
 
+## Pasos concretos por integrante
+
+### Oscar · reportes y outbox (`trabajo/oscar-reportes-v1`)
+
+1. Crear `FoundPetReport` con descripción, ubicación, consentimiento de teléfono, usuario, clave de idempotencia y fecha. No exigir una mascota registrada.
+2. Crear una tabla de outbox genérica para eventos nuevos de extravío y hallazgo. Mantener la tabla de eventos anterior y ofrecer también sus pendientes, porque `create_all` no migra ni borra tablas existentes.
+3. Cambiar la publicación de extravíos para confirmar reporte y evento genérico juntos. Añadir publicación y consulta de hallazgos, con el mismo tratamiento de reintentos y conflictos.
+4. Añadir listas públicas de ambos tipos, con filtro por municipio y máximo de 100 elementos. Nunca exponer `owner_id`, clave de idempotencia ni hash de la solicitud.
+5. Añadir feed y ACK internos protegidos con `X-Internal-Token`; comparar el secreto de forma segura y fallar cerrado cuando falte la configuración. El feed ordena eventos pendientes y el ACK repetido no duplica efectos.
+6. Probar transacción, reintento, privacidad, filtros, eventos antiguos y ACK. Verificar al menos una publicación y ACK sobre PostgreSQL. El PR de Oscar es [#4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4).
+
+### Luisa · proceso de alertas (`trabajo/luisa-alertas-v1`)
+
+1. Crear `app/alerts/main.py`, base ORM propia y modelos de suscripción y alerta. La restricción única `(event_id, recipient_id)` debe vivir en PostgreSQL. No importar `app.core.db.Base` en los modelos de alertas: eso crearía tablas en la base equivocada.
+2. Implementar las rutas de suscribir, listar, cancelar y consultar bandeja del [contrato](CONTRATOS_02_SEPARACION.md#alertas-luisa--amy). Usar el UUID de `get_actor_id`; cada persona solo ve sus datos. No copiar cuentas a la base de alertas.
+3. Implementar un trabajador que cada 10 s consulte `http://app:8000/api/reportes/internal/events?limit=50` con `X-Internal-Token` y timeout de 2 s. Por cada evento, guardar alertas para suscriptores ya existentes al `created_at` del evento, confirmar la transacción propia y **después** enviar ACK. Si GET o ACK falla, reintentar en el siguiente ciclo sin borrar datos.
+4. Modificar Compose para levantar `alertas` como proceso separado en el puerto local 8001 y crear `four_nodes_alerts` dentro del PostgreSQL existente. La creación debe ser idempotente incluso con un volumen previo de `01-monolito`; no pedir `docker compose down -v`. Configurar `INTERNAL_API_TOKEN` en ambos procesos y `AUTH_SECRET` en ambos.
+5. Quitar el router de alertas de `app/main.py` y su metadata de `app/core/db.py`. Permitir CORS solo a `http://localhost:8000` para la web local. Añadir health checks para su base propia.
+6. Probar usuario ajeno, suscripción repetida, suscripción posterior al evento, entrega duplicada, caída de reportes y caída/reinicio de alertas. Documentar los comandos y el tiempo observado en su PR.
+
+### Ceci · identidad (`trabajo/ceci-identidad-v1`)
+
+1. Crear modelo de usuario en `app/identity/models.py` con UUID, correo normalizado y único, hash de contraseña y fecha de alta. La base sigue siendo `four_nodes` del proceso `app`.
+2. Implementar registro e inicio de sesión con los cuerpos y errores del [contrato](CONTRATOS_02_SEPARACION.md#identidad-ceci--oscar-luisa-y-amy). Usar `pwdlib` con Argon2id para el hash; nunca guardar ni devolver contraseñas sin hash.
+3. Emitir JWT HS256 de 60 min con `sub` UUID, `iss=the-four-nodes` y `exp`; `AUTH_SECRET` proviene solo del entorno. En `app/core/auth.py`, verificar firma, emisor y vencimiento y conservar la función `get_actor_id` para no cambiar los módulos consumidores.
+4. `GET /api/usuarios/me` devuelve el ID y correo de la cuenta del token. Si falta Bearer o es inválido/vencido, devolver 401. El verificador no debe depender de consultar la base; Luisa lo reutilizará en el proceso de alertas.
+5. Añadir pruebas de correo duplicado, clave incorrecta, hash distinto al texto claro, token alterado/vencido y acceso a mascota/reporte solo como su dueño. Las pruebas previas del actor demo necesitan reemplazar la dependencia en el entorno de test.
+6. Documentar en el PR cómo generar `AUTH_SECRET` localmente y cómo el servicio de alertas valida el mismo token. No separar identidad en otro proceso todavía.
+
+### Amy · interfaz (`trabajo/amy-interfaz-v1`)
+
+1. Mantener el formulario de extravío y su reintento con la misma clave. Crear formularios de registro e inicio de sesión; conservar el token solo durante la sesión del navegador y enviarlo como Bearer en operaciones privadas.
+2. Añadir formulario de hallazgo con descripción, fecha, municipio, colonia y referencia. Reutilizar el componente de consentimiento del teléfono. Crear la página pública `/reportes/hallazgos/{id}` que consulta `GET /api/reportes/hallazgos/{id}`.
+3. Mostrar listas públicas filtrables por municipio para extravíos y hallazgos; cada tarjeta enlaza a la página correspondiente.
+4. Añadir pantalla para seguir/dejar de seguir un municipio y bandeja de alertas. Llamar al servicio local de alertas en `localhost:8001` con Bearer y consultar la bandeja al menos cada 30 s cuando esté abierta. Los `public_url` de alertas son rutas relativas al origen de la web.
+5. Mostrar estados claros para 401 (entrar), 409 (clave reutilizada con otros datos), red caída, publicación exitosa y bandeja vacía. No afirmar que se envían notificaciones al teléfono.
+6. Probar manualmente en móvil y escritorio; añadir pruebas para rutas HTML y, si es posible, la lógica de envío de token y reutilización de clave. Documentar capturas o pasos reproducibles en su PR.
+
 ## Secuencia de integración
 
 1. Publicar esta rama base con los contratos y arrancar las cuatro ramas personales desde ella.

@@ -46,3 +46,7 @@ El formulario tiene cuatro pasos, validación por etapa, selección visual de es
 
 Verificación con Edge/Playwright: fotografías cargadas, sin desbordamiento en 390/768/1440 px, campos obligatorios por paso, consentimiento de teléfono, vista previa y reintento simulado conservando la clave de idempotencia. Dos pruebas de rutas web aprobadas.
 
+## Trabajo de Amy en `02-separacion`
+
+Crea `trabajo/amy-interfaz-v1` desde `02-separacion`. Conserva el flujo de extravío y agrega registro/login, hallazgos, listas por municipio, suscripción y bandeja. La página HTML `/reportes/hallazgos/{id}` completa el enlace que devuelve la API de Oscar. Envía Bearer a las rutas privadas; durante esta demo local la web usa `localhost:8000` y alertas `localhost:8001`. Consulta la bandeja cada 30 segundos o menos mientras esté abierta. Sigue [PLAN_02_SEPARACION.md](../../docs/PLAN_02_SEPARACION.md#amy--interfaz-trabajoamy-interfaz-v1) y [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md). Publica PR con base `02-separacion` y documenta pruebas de móvil, errores y reintentos.
+
