@@ -36,4 +36,8 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-`main` → documentación y versión estable. `01-monolito` → primera entrega ejecutable. Más adelante: `02-separacion`, `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de la primera entrega parten de `01-monolito` y vuelven a ella mediante revisión del equipo.
+`main` → versión estable. `01-monolito` → primera entrega ejecutable. `02-separacion` → versión 1 distribuida en desarrollo. Después vienen `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de cada etapa parten de su rama de etapa y vuelven a ella mediante revisión del equipo.
+
+## Primera versión distribuida: `02-separacion`
+
+Esta rama inicia la separación entre reportes y alertas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos de API y eventos](docs/CONTRATOS_02_SEPARACION.md) y la [guía de trabajo](docs/COMO_TRABAJAR_02.md) definen qué debe implementar cada integrante y cómo integrar sus Pull Requests. **Es una rama en desarrollo**: `01-monolito` sigue siendo la versión funcional hasta que pasen las pruebas de aceptación de la nueva etapa.
