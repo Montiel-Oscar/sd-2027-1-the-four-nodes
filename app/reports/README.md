@@ -29,3 +29,18 @@ Para ejecutar las pruebas de este módulo: `docker compose exec app pip install 
 **Integración pendiente:** Luisa agrega `create_pet_for_owner` y `get_pet_for_owner` en `app/pets/service.py`. Deben recibir la sesión existente, devolver `id`, `name`, `species` y `traits`, y no hacer `commit`. Con su rama integrada, repetir el ejemplo anterior con PostgreSQL y comprobar que el enlace público sigue disponible tras reiniciar los contenedores.
 
 Haz commits con tu identidad de Git, publica `trabajo/oscar-extravios` y solicita integración hacia `01-monolito`. Después de integrar identidad y mascotas, coordina una prueba del flujo completo con Amy.
+
+## Versión 1 distribuida · trabajo de Oscar
+
+La rama `trabajo/oscar-reportes-v1` parte de `02-separacion`. Mantiene los endpoints de extravíos y añade:
+
+- `POST /api/reportes/hallazgos`, `GET /api/reportes/hallazgos/{id}` y `GET /api/reportes/hallazgos?municipality=...`.
+- `GET /api/reportes/extravios?municipality=...` para explorar reportes públicos.
+- Una tabla `outbox_events_v1` genérica para los nuevos eventos de extravío y hallazgo, guardados en la misma transacción que el reporte. La tabla `pending_report_events` de la etapa anterior se mantiene para ofrecer sus eventos pendientes sin borrar ni migrar el volumen.
+- `GET /api/reportes/internal/events?limit=50` y `POST /api/reportes/internal/events/{id}/ack`, protegidos con `X-Internal-Token`. Este token debe coincidir con `INTERNAL_API_TOKEN` en el entorno de `app` y del trabajador de Luisa. Sin configurar el secreto, la API interna responde 503; con token incorrecto, 403.
+
+El feed devuelve eventos pendientes antiguos y nuevos, ordenados por fecha. El ACK es repetible y fija `processed_at` sin borrar el evento. **Publicar nunca llama a alertas**: el proceso de Luisa consultará este feed, guardará alertas en su propia base y después llamará al ACK. El contrato exacto está en [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md).
+
+Las pruebas del módulo están en `tests/test_reports.py`: `docker compose exec app pytest -q tests/test_reports.py`. Se comprobó además hallazgo, reintento, feed y ACK contra PostgreSQL. El enlace HTML `/reportes/hallazgos/{id}` quedará disponible cuando Amy integre la vista pública; mientras tanto los datos públicos se consultan en `/api/reportes/hallazgos/{id}`. Cuando Ceci integre Bearer, las pruebas existentes deben sustituir `get_actor_id` por una dependencia de prueba.
+
+Para la integración, Luisa debe configurar el mismo token interno en `app` y `alertas` desde `.env`, y consumir el JSON del feed sin compartir tablas. Tras integrar su PR, probar el escenario `docker compose stop alertas` → publicar → `docker compose start alertas` → una sola alerta por destinatario.
