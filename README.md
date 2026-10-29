@@ -11,18 +11,17 @@ Proyecto final de Sistemas Distribuidos 2027-1 de la FI-UNAM. Una persona public
 
 ## Primera entrega: `01-monolito`
 
-La rama `main` contiene la documentación. La rama `01-monolito` contiene una sola aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. El primer flujo a completar es **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito puede usar una cuenta de demostración; la separación en servicios vendrá después.
+La rama `main` conserva la versión estable y la documentación. La rama `01-monolito` guarda la primera entrega: una aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. Su flujo principal permite **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito usa una cuenta de demostración; la separación en servicios avanza en `02-separacion`.
 
 **Entrega del curso:** sábado 17 de octubre de 2026, antes de las 07:00. El equipo comparte la liga del repositorio en su comentario de la Discussion #44 cuando la rama `01-monolito` tenga el flujo principal funcionando.
 
 La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
 
-## Estado del monolito · 13 de octubre de 2026
+## Estado del monolito · 22 de octubre de 2026
 
-- **Base común:** `01-monolito` ya levanta FastAPI y PostgreSQL con Docker Compose. Las rutas de salud funcionan; el flujo de publicación completo todavía no está integrado.
-- **Oscar:** implementó reportes de extravío, consulta pública, evento pendiente e idempotencia en `trabajo/oscar-extravios`. Está en la [solicitud de integración #1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1), aún en borrador porque necesita el módulo de mascotas de Luisa.
-- **Luisa, Cecilia y Amy:** pueden trabajar **en paralelo**, cada una desde `01-monolito` en la rama y carpeta indicadas en el [reparto](docs/REPARTO_01_MONOLITO.md). Luisa implementa primero el contrato de `app/pets/service.py` para desbloquear la prueba real de reportes; Cecilia prepara la identidad de demostración y Amy la interfaz al mismo tiempo.
-- **Para integrar:** revisar e integrar identidad y mascotas, después reportes y por último la interfaz. Entonces probar publicación, reintento, enlace público y persistencia después de reiniciar los contenedores.
+La rama `01-monolito` integra mascotas, reportes, una cuenta de demostración y una interfaz web. Se puede publicar un extravío con una mascota nueva, reintentar sin duplicarlo y abrir su página pública. El reporte y el evento pendiente se guardan en una sola transacción. También se pueden registrar y consultar fichas propias de mascotas.
+
+Luisa entregó el módulo de mascotas en la [solicitud #2](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/2), Amy la interfaz en la [#3](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/3) y Oscar el módulo de reportes en la [#1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1). No se encontró rama ni solicitud de Cecilia; el mínimo de identidad de demostración se completó durante la integración. El registro real de usuarios y el envío de alertas corresponden a etapas posteriores del PRD.
 
 ## Levantar la aplicación
 
@@ -37,4 +36,10 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-`main` → documentación y versión estable. `01-monolito` → primera entrega ejecutable. Más adelante: `02-separacion`, `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de la primera entrega parten de `01-monolito` y vuelven a ella mediante revisión del equipo.
+`main` → versión estable. `01-monolito` → primera entrega ejecutable. `02-separacion` → versión 1 distribuida en desarrollo. Después vienen `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de cada etapa parten de su rama de etapa y vuelven a ella mediante revisión del equipo.
+
+## Primera versión distribuida: `02-separacion`
+
+Esta rama inicia la separación entre reportes y alertas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos de API y eventos](docs/CONTRATOS_02_SEPARACION.md) y la [guía de trabajo](docs/COMO_TRABAJAR_02.md) definen qué debe implementar cada integrante y cómo integrar sus Pull Requests. **Es una rama en desarrollo**: `01-monolito` sigue siendo la versión funcional hasta que pasen las pruebas de aceptación de la nueva etapa.
+
+Oscar ya publicó su parte de reportes y outbox en el [PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4). Luisa, Ceci y Amy pueden trabajar en paralelo desde `02-separacion` siguiendo las instrucciones de su carpeta y los contratos comunes. El servicio de alertas, el login y las nuevas pantallas aún no están integrados en esta rama.
