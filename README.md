@@ -11,7 +11,7 @@ Proyecto final de Sistemas Distribuidos 2027-1 de la FI-UNAM. Una persona public
 
 ## Primera entrega: `01-monolito`
 
-La rama `main` contiene la documentación. La rama `01-monolito` contiene una sola aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. El primer flujo a completar es **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito puede usar una cuenta de demostración; la separación en servicios vendrá después.
+La rama `main` conserva la versión estable y la documentación. La rama `01-monolito` guarda la primera entrega: una aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. Su flujo principal permite **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito usa una cuenta de demostración; la separación en servicios avanza en `02-separacion`.
 
 **Entrega del curso:** sábado 17 de octubre de 2026, antes de las 07:00. El equipo comparte la liga del repositorio en su comentario de la Discussion #44 cuando la rama `01-monolito` tenga el flujo principal funcionando.
 
@@ -36,4 +36,10 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-`main` → documentación y versión estable. `01-monolito` → primera entrega ejecutable. Más adelante: `02-separacion`, `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de la primera entrega parten de `01-monolito` y vuelven a ella mediante revisión del equipo.
+`main` → versión estable. `01-monolito` → primera entrega ejecutable. `02-separacion` → versión 1 distribuida en desarrollo. Después vienen `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de cada etapa parten de su rama de etapa y vuelven a ella mediante revisión del equipo.
+
+## Primera versión distribuida: `02-separacion`
+
+Esta rama inicia la separación entre reportes y alertas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos de API y eventos](docs/CONTRATOS_02_SEPARACION.md) y la [guía de trabajo](docs/COMO_TRABAJAR_02.md) definen qué debe implementar cada integrante y cómo integrar sus Pull Requests. **Es una rama en desarrollo**: `01-monolito` sigue siendo la versión funcional hasta que pasen las pruebas de aceptación de la nueva etapa.
+
+Oscar ya publicó su parte de reportes y outbox en el [PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4). Luisa, Ceci y Amy pueden trabajar en paralelo desde `02-separacion` siguiendo las instrucciones de su carpeta y los contratos comunes. El servicio de alertas, el login y las nuevas pantallas aún no están integrados en esta rama.
