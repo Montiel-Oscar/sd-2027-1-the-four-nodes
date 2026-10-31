@@ -1,15 +1,108 @@
-# Cecilia · identidad de la primera entrega
+# Ceci · identidad de `02-separacion`
 
-**Rama de partida:** `01-monolito`. Antes de editar: `git switch 01-monolito`, `git pull origin 01-monolito` y `git switch -c trabajo/cecilia-identidad`. En GitHub Desktop, selecciona la rama base, actualízala y crea tu rama personal.
+Rama personal: `trabajo/ceci-identidad-v1`, creada desde `02-separacion`.
+El Pull Request se dirige a **`02-separacion`**.
 
-El [PRD](../../docs/PRD.md) permite una cuenta de demostración en esta rama. Revisa `app/core/auth.py` y deja una dependencia `get_actor_id` estable para Oscar y Luisa. Si añades registro e inicio de sesión, deben seguir siendo parte de **esta única aplicación y base**; no crees otro servicio todavía.
+Esta etapa sustituye la cuenta demo por cuentas reales dentro del proceso `app`
+y su base `four_nodes`. El contrato está en
+[CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md).
+Las pantallas corresponden a Amy; el proceso de alertas corresponde a Luisa.
 
-**Entregable mínimo:** un actor de demostración consistente y una prueba que muestre que las operaciones privadas reciben su ID. Documenta cómo sustituirlo por autenticación real. Si completas registro e inicio de sesión, añade pruebas de contraseña incorrecta y de acceso sin sesión. Publica tu rama y solicita integración hacia `01-monolito`.
+## Implementación
 
-## Estado integrado
+- `models.py`: tabla `users`, UUID, correo único en minúsculas, hash Argon2id
+  con sal por cuenta y fecha de alta UTC. No se guardan contraseñas en claro.
+- `router.py`: registro, login y cuenta actual; las respuestas excluyen hashes
+  y contraseñas, incluidos los errores de validación.
+- `app/core/auth.py`: emisión y verificación JWT HS256 con `sub` UUID,
+  `iss=the-four-nodes` y `exp` a 60 minutos. `get_actor_id` conserva su nombre.
+- La validación del token no importa modelos ni consulta la base de usuarios.
+  `/me` sí consulta la cuenta para devolver el correo.
+- `compose.yaml` pasa `AUTH_SECRET` del entorno al contenedor `app`.
+- Las pruebas anteriores de reportes sustituyen `get_actor_id` por un actor de
+  prueba. No hay acceso automático como demo en las rutas privadas reales.
 
-No se recibió una rama o solicitud de integración de Cecilia para esta etapa. Se completó el mínimo con el actor fijo de `app/core/auth.py`, `GET /api/usuarios/me` y `tests/test_identity.py`. Toda publicación y ficha usa `get_actor_id`; las cuentas reales, credenciales y tokens quedan para las ramas posteriores del PRD. Esta cuenta de demostración es compartida por todos los visitantes locales.
+## Configuración local
 
-## Trabajo de Ceci en `02-separacion`
+1. Copiar `.env.example` a `.env` si aún no existe. Conservar la contraseña de
+   PostgreSQL existente para reutilizar el volumen.
+2. Generar un secreto con Python:
 
-Crea `trabajo/ceci-identidad-v1` desde `02-separacion`. En esta etapa implementa usuarios reales con correo, hash Argon2id, login y token firmado; identidad aún vive dentro de `app` y de su base. Conserva `get_actor_id` para reportes, mascotas y alertas. Sigue los pasos de [PLAN_02_SEPARACION.md](../../docs/PLAN_02_SEPARACION.md#ceci--identidad-trabajoceci-identidad-v1) y el contrato de [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md#identidad-ceci--oscar-luisa-y-amy). Prueba 401 sin token, clave incorrecta, expiración y propiedad entre dos usuarios. Publica PR con base `02-separacion`.
+   ```bash
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+
+3. Pegar el resultado en `.env` como `AUTH_SECRET=valor_generado`. Debe tener
+   al menos 32 bytes. No subir `.env`, no pegar el secreto en el PR.
+4. Ejecutar `docker compose up --build -d` y abrir `http://localhost:8000/docs`.
+
+La tabla de usuarios se crea durante el arranque con la metadata existente.
+No se necesita borrar el volumen. Las mascotas/reportes de la cuenta demo
+anterior conservan su dueño original; no se asignan automáticamente a cuentas
+nuevas.
+
+## Comprobar registro e inicio de sesión
+
+En `/docs`, ejecutar:
+
+1. `POST /api/usuarios/register` con
+   `{"email":"persona@example.org","password":"una-clave-de-8-o-mas"}`.
+   Devuelve 201 con `id` y correo. Repetir el correo, incluso cambiando sus
+   mayúsculas, devuelve 409. Un correo inválido o contraseña fuera de 8–1024
+   caracteres devuelve 422. La contraseña no se recorta ni cambia de caso.
+2. `POST /api/usuarios/login` con los mismos datos. Devuelve `access_token`
+   y `token_type: bearer`. Credenciales incorrectas devuelven 401.
+3. Pulsar **Authorize** y pegar únicamente el token en el campo de HTTPBearer.
+4. `GET /api/usuarios/me` devuelve el ID y correo de la cuenta.
+5. Crear una mascota y publicar un extravío con esa ficha. Con otra cuenta,
+   esa mascota no aparece en la lista propia y consultarla devuelve 404.
+6. Sin token, o con uno inválido/vencido, las rutas privadas devuelven 401 y
+   `WWW-Authenticate: Bearer`. Los reportes públicos continúan accesibles.
+7. Reiniciar con `docker compose restart`; iniciar sesión de nuevo y comprobar
+   que la cuenta, mascotas y reportes siguen guardados.
+
+Si `AUTH_SECRET` falta o tiene menos de 32 bytes, la emisión o comprobación de
+un token responde 503: no se utiliza un secreto por defecto.
+
+## Integración con alertas
+
+Luisa debe pasar **el mismo `AUTH_SECRET`** al proceso `alertas` y reutilizar
+`Depends(get_actor_id)` de `app.core.auth`. Ese módulo solo requiere FastAPI,
+PyJWT y el secreto; no necesita la base de identidad ni llamadas HTTP a `app`.
+El token emitido por login sirve en ambos procesos. Las cuentas se guardan
+únicamente en `four_nodes`. Cambiar el secreto invalida los tokens anteriores.
+
+Este PR solo incorpora la variable en el servicio `app`; al integrar la rama
+de alertas, su Compose también debe transmitirla al nuevo servicio. No crea
+el trabajador, las suscripciones ni las pantallas de login.
+
+## Pruebas
+
+```bash
+python -m pip install -e '.[dev]'
+python -m pytest -q
+```
+
+`tests/test_identity.py` comprueba registro, normalización/unicidad, Argon2id,
+credenciales incorrectas, respuestas sin contraseñas, expiración, alteración,
+firma/emisor/algoritmo/claims inválidos, configuración ausente y aislamiento
+entre dos usuarios. También valida el mismo token en otra app FastAPI sin
+sesión de base de datos, para comprobar su uso por alertas.
+
+Las pruebas rápidas usan SQLite en memoria; el esquema de prueba adapta los
+UUID de PostgreSQL a CHAR para evitar conversiones numéricas de SQLite.
+La validación con Docker utiliza PostgreSQL y conserva el volumen anterior.
+
+## Resultado de verificación
+
+- **30 pruebas aprobadas** en la suite completa.
+- Docker Compose y PostgreSQL: registro de dos cuentas, correo duplicado,
+  contraseña incorrecta, login, `/me`, acceso privado y propiedad de mascotas.
+- Comprobación directa de hashes Argon2id y `owner_id` en PostgreSQL.
+- Publicación y reintento de extravío con Bearer; consulta pública sin token.
+- Token validado desde un segundo contenedor sin conexión a la base de usuarios.
+- Reinicio de app y PostgreSQL: cuenta, contraseña protegida, login, token,
+  mascota y reporte conservados. Volumen previo del monolito preservado.
+
+La integración completa con el servicio de alertas y las pantallas se verifica
+cuando se incorporen las ramas de Luisa y Amy.
