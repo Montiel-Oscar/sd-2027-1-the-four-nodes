@@ -9,12 +9,14 @@ from sqlalchemy import String, Uuid, create_engine, func, select
 from sqlalchemy.orm import Mapped, Session, mapped_column, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.auth import DEMO_USER_ID
+from app.core.auth import get_actor_id
 from app.core.db import Base, get_session
 from app.reports import service
 from app.reports.models import MissingPetReport, PendingReportEvent
 from app.reports.router import router
 from app.web.router import router as web_router
+
+DEMO_USER_ID = UUID("00000000-0000-4000-8000-000000000001")
 
 
 class ExamplePet(Base):
@@ -61,6 +63,7 @@ def setup(monkeypatch):
     app.include_router(web_router)
     app.include_router(router)
     app.dependency_overrides[get_session] = session_dependency
+    app.dependency_overrides[get_actor_id] = lambda: DEMO_USER_ID
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client, factory
     engine.dispose()
