@@ -47,7 +47,7 @@ El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md) y los [contratos](docs/CO
 - [x] **Oscar:** reportes de hallazgo, listas y outbox HTTP ([PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4)).
 - [x] **Ceci:** registro, login y JWT compartido ([PR #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7)).
 - [x] **Luisa + integración:** servicio de alertas, segunda base lógica y Compose ([PR #5](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/5)); su PR se fusionó originalmente en `main`, y el trabajo se incorporó también a `02-separacion`.
-- [x] **Integración:** 34 pruebas automáticas y prueba HTTP de hallazgo, alerta y bandeja privada en `02-separacion`.
+- [x] **Integración:** 34 pruebas automáticas y prueba HTTP de hallazgo, alerta y bandeja privada; publicación durante la caída de `alertas` y entrega única tras reiniciarlo en `02-separacion`.
 - [ ] **Amy:** interfaz distribuida: login, hallazgos, suscripciones, bandeja y adaptación del formulario de extravío a JWT. Todavía no hay PR de esta etapa.
 - [ ] **Equipo:** tras integrar a Amy, revisión en móvil y escritorio y medición de alertas con hasta 20 suscriptores.
 
