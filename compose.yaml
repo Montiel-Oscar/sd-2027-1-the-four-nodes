@@ -17,6 +17,7 @@ services:
     build: .
     environment:
       DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes
+      AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
     ports:
       - "8000:8000"
     depends_on:
