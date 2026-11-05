@@ -17,11 +17,19 @@ La rama `main` contiene la documentación. La rama `01-monolito` contiene una so
 
 La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
 
-## Estado del monolito · 22 de octubre de 2026
+## Estado del monolito · 5 de noviembre de 2026
 
 La rama `01-monolito` integra mascotas, reportes, una cuenta de demostración y una interfaz web. Se puede publicar un extravío con una mascota nueva, reintentar sin duplicarlo y abrir su página pública. El reporte y el evento pendiente se guardan en una sola transacción. También se pueden registrar y consultar fichas propias de mascotas.
 
-Luisa entregó el módulo de mascotas en la [solicitud #2](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/2), Amy la interfaz en la [#3](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/3) y Oscar el módulo de reportes en la [#1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1). No se encontró rama ni solicitud de Cecilia; el mínimo de identidad de demostración se completó durante la integración. El registro real de usuarios y el envío de alertas corresponden a etapas posteriores del PRD.
+La entrega está cerrada:
+
+- [x] **Oscar:** publicar extravíos con evento e idempotencia ([PR #1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1)).
+- [x] **Luisa:** fichas y consulta de mascotas ([PR #2](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/2)).
+- [x] **Amy:** interfaz de publicación y página pública ([PR #3](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/3)).
+- [x] **Ceci:** verificación de la identidad de demostración y del flujo con mascotas y reportes ([PR #6](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/6)).
+- [x] **Equipo:** 10 pruebas automatizadas aprobadas.
+
+El registro real de usuarios y el servicio separado de alertas se desarrollan en `02-separacion`.
 
 ## Levantar la aplicación
 
@@ -36,4 +44,4 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-`main` → documentación y versión estable. `01-monolito` → primera entrega ejecutable. Más adelante: `02-separacion`, `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de la primera entrega parten de `01-monolito` y vuelven a ella mediante revisión del equipo.
+Las ramas permanentes son `main`, `01-monolito` y `02-separacion`. Esta rama contiene la primera entrega terminada. El avance y lo pendiente de la segunda entrega se documentan en el [README de `02-separacion`](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/blob/02-separacion/README.md).
