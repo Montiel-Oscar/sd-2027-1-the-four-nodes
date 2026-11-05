@@ -24,6 +24,7 @@ Se conservan tres ramas permanentes: `main`, `01-monolito` (entrega terminada) y
 2. En `02-separacion`, `docker compose up --build -d`: arranque correcto de `db`, `app`, inicializador y `alertas`; ambos `/health/ready` respondieron 200.
 3. En `02-separacion`, el mismo comando de `pytest`: **34 pruebas aprobadas**.
 4. `python3 scripts/smoke_02.py`: registró dos cuentas, publicó un hallazgo idempotente, entregó una alerta por HTTP a la cuenta suscrita y confirmó que la bandeja de la otra cuenta seguía vacía. La alerta llegó en menos de 9 segundos en esta ejecución local.
+5. Se detuvo solo `alertas`, se publicó otro hallazgo con respuesta 201 y se consultó públicamente. Al reiniciar `alertas`, la bandeja de la cuenta suscrita recibió una sola alerta. El ensayo conservó las bases y los contenedores de `app` y PostgreSQL.
 
 La prueba de carga de 20 suscriptores y la revisión visual en móvil/escritorio siguen pendientes. Estas pruebas locales no demuestran un despliegue público ni disponibilidad ante caída de PostgreSQL.
 
@@ -31,7 +32,7 @@ La prueba de carga de 20 suscriptores y la revisión visual en móvil/escritorio
 
 **Amy:** entregar un PR hacia `02-separacion` desde una rama temporal nueva. Su trabajo está definido en [PLAN_02_SEPARACION.md](PLAN_02_SEPARACION.md#amy--interfaz-trabajoamy-interfaz-v1): registro e inicio de sesión, uso de Bearer en operaciones privadas, formulario y página pública de hallazgos, listas, suscripciones y bandeja con consulta cada 30 segundos. La web actual conserva el formulario del monolito y todavía no usa JWT, por lo que no completa el flujo distribuido. La ruta pública `/reportes/hallazgos/{id}` todavía no existe aunque el API devuelve esa URL.
 
-**Equipo, después del PR de Amy:** revisar el PR, probar el flujo en móvil y escritorio, medir el tiempo de entrega con hasta 20 suscriptores y comprobar la recuperación tras detener/reiniciar `alertas`. Si pasan, actualizar esta lista y decidir si incorporar `02-separacion` a `main`.
+**Equipo, después del PR de Amy:** revisar el PR, probar el flujo en móvil y escritorio y medir el tiempo de entrega con hasta 20 suscriptores. Si pasan, actualizar esta lista y decidir si incorporar `02-separacion` a `main`.
 
 ## Cómo continuar
 

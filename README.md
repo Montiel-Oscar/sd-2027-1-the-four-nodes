@@ -47,7 +47,7 @@ La rama `02-separacion` tiene dos procesos FastAPI y dos bases lógicas. El [pla
 - [x] **Oscar:** hallazgos, listas públicas, publicación idempotente y feed/ACK del outbox ([PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4)).
 - [x] **Ceci:** registro, login, JWT y autorización compartida ([PR #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7)).
 - [x] **Luisa + integración:** API y trabajador de alertas, bandeja privada, segunda base lógica y Compose ([PR #5](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/5)); el PR entró por error a `main` y su commit se incorporó también a `02-separacion`.
-- [x] **Integración:** 34 pruebas automáticas; prueba HTTP de registro, hallazgo, entrega de alerta y bandeja privada.
+- [x] **Integración:** 34 pruebas automáticas; prueba HTTP de registro, hallazgo, entrega de alerta y bandeja privada; publicación durante la caída de `alertas` y entrega única tras reiniciarlo.
 - [ ] **Amy:** nueva interfaz para registro/login, hallazgos, suscripciones y bandeja; adaptar el formulario de extravíos a Bearer JWT y crear la página pública de hallazgos. Aún no hay PR de esta etapa.
 - [ ] **Equipo, después de Amy:** prueba manual completa en móvil y escritorio y medición de alertas con hasta 20 suscriptores para confirmar el objetivo de 3 minutos.
 
