@@ -18,7 +18,7 @@ from app.identity.models import User
 from app.identity.router import password_hash, router as identity_router
 from app.pets.models import Pet
 from app.pets.router import router as pets_router
-from app.reports.models import MissingPetReport, PendingReportEvent
+from app.reports.models import MissingPetReport, PendingReportEvent, OutboxEventV1
 from app.reports.router import router as reports_router
 from app.web.router import router as web_router
 
@@ -34,7 +34,7 @@ def setup(monkeypatch):
     )
     # Solo el esquema de prueba adapta UUID PostgreSQL a CHAR para SQLite.
     metadata = MetaData()
-    for table in (User.__table__, Pet.__table__, MissingPetReport.__table__, PendingReportEvent.__table__):
+    for table in (User.__table__, Pet.__table__, MissingPetReport.__table__, PendingReportEvent.__table__, OutboxEventV1.__table__):
         copied = table.to_metadata(metadata)
         for column in copied.columns:
             if isinstance(column.type, PostgreSQLUUID):

@@ -1,22 +1,104 @@
-import os
-import asyncio
-import httpx
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import List
-from datetime import datetime
-import uuid
+"""Servicio de alertas: consume el outbox de reportes por HTTP."""
 
-from app.alerts.db import engine, Base, get_db
-from app.alerts.models import Subscription, Alert
+import asyncio
+import logging
+import os
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from uuid import UUID
+
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from app.alerts.db import Base, SessionLocal, engine, get_db
+from app.alerts.models import Alert, Subscription
 from app.core.auth import get_actor_id
 
-Base.metadata.create_all(bind=engine)
+logger = logging.getLogger(__name__)
+INTERNAL_API_URL = os.getenv("INTERNAL_API_URL", "http://app:8000/api/reportes")
 
-app = FastAPI(title="Microservicio de Alertas", version="1.0")
 
+def utc(value: datetime) -> datetime:
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+
+async def process_event(client: httpx.AsyncClient, event: dict, token: str) -> None:
+    event_id = UUID(event["id"])
+    created_at = utc(datetime.fromisoformat(event["created_at"].replace("Z", "+00:00")))
+    with SessionLocal() as db:
+        subscribers = db.scalars(
+            select(Subscription).where(Subscription.municipality == event["municipality"])
+        ).all()
+        for subscription in subscribers:
+            if utc(subscription.created_at) > created_at:
+                continue
+            already_sent = db.scalar(
+                select(Alert.id).where(
+                    Alert.event_id == event_id,
+                    Alert.recipient_id == subscription.recipient_id,
+                )
+            )
+            if already_sent is None:
+                db.add(
+                    Alert(
+                        event_id=event_id,
+                        recipient_id=subscription.recipient_id,
+                        type=event["type"],
+                        municipality=event["municipality"],
+                        public_url=event["public_url"],
+                    )
+                )
+        db.commit()
+    # El ACK ocurre después del commit. Un ACK perdido reintenta sin duplicar alertas.
+    response = await client.post(
+        f"{INTERNAL_API_URL}/internal/events/{event_id}/ack",
+        headers={"X-Internal-Token": token},
+    )
+    response.raise_for_status()
+
+
+async def alert_worker() -> None:
+    while True:
+        try:
+            token = os.getenv("INTERNAL_API_TOKEN", "")
+            if not token:
+                raise RuntimeError("Falta INTERNAL_API_TOKEN")
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                response = await client.get(
+                    f"{INTERNAL_API_URL}/internal/events",
+                    params={"limit": 50},
+                    headers={"X-Internal-Token": token},
+                )
+                response.raise_for_status()
+                for event in response.json()["events"]:
+                    await process_event(client, event, token)
+        except asyncio.CancelledError:
+            raise
+        except (httpx.HTTPError, SQLAlchemyError, KeyError, TypeError, ValueError, RuntimeError):
+            logger.exception("No se pudo procesar el lote de alertas; se reintentará")
+        await asyncio.sleep(10)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    worker = asyncio.create_task(alert_worker())
+    try:
+        yield
+    finally:
+        worker.cancel()
+        try:
+            await worker
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title="Servicio de alertas", version="1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8000"],
@@ -25,119 +107,94 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-INTERNAL_API_URL = os.getenv("INTERNAL_API_URL", "http://app:8000/api/reportes")
-INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN", "secret-token")
 
 class SubscriptionCreate(BaseModel):
-    municipality: str
+    municipality: str = Field(min_length=1, max_length=120)
+
 
 class SubscriptionResponse(BaseModel):
-    id: uuid.UUID
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
     municipality: str
     created_at: datetime
-    class Config:
-        from_attributes = True
+
 
 class AlertResponse(BaseModel):
-    id: uuid.UUID
-    event_id: uuid.UUID
-    message: str
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    event_id: UUID
+    type: str
     municipality: str
+    public_url: str
     created_at: datetime
-    class Config:
-        from_attributes = True
 
-async def alert_worker():
-    await asyncio.sleep(5)
-    while True:
-        try:
-            async with httpx.AsyncClient(timeout=2.0) as client:
-                headers = {"X-Internal-Token": INTERNAL_API_TOKEN}
-                response = await client.get(f"{INTERNAL_API_URL}/internal/events?limit=50", headers=headers)
-                
-                if response.status_code == 200:
-                    events = response.json()
-                    db = next(get_db())
-                    try:
-                        for event in events:
-                            event_id = event.get("id")
-                            municipality = event.get("municipality")
-                            event_created_at = datetime.fromisoformat(event.get("created_at"))
-                            message = event.get("message", f"Nuevo reporte en {municipality}")
-                            
-                            subs = db.query(Subscription).filter(
-                                Subscription.municipality == municipality,
-                                Subscription.created_at <= event_created_at
-                            ).all()
-                            
-                            for sub in subs:
-                                exists = db.query(Alert).filter_by(
-                                    event_id=event_id, 
-                                    recipient_id=sub.recipient_id
-                                ).first()
-                                
-                                if not exists:
-                                    new_alert = Alert(
-                                        event_id=event_id,
-                                        recipient_id=sub.recipient_id,
-                                        message=message,
-                                        municipality=municipality
-                                    )
-                                    db.add(new_alert)
-                            
-                            db.commit()
-                            
-                            ack_resp = await client.post(
-                                f"{INTERNAL_API_URL}/internal/events/{event_id}/ack",
-                                headers=headers
-                            )
-                    except Exception as e:
-                        db.rollback()
-                        print(f"Error procesando eventos en worker: {e}")
-                    finally:
-                        db.close()
-        except Exception as err:
-            print(f"Error de conexión en worker de alertas: {err}")
-        
-        await asyncio.sleep(10)
 
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(alert_worker())
-
-@app.post("/api/alertas/subscriptions", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED)
-def create_subscription(sub_in: SubscriptionCreate, db: Session = Depends(get_db), actor_id: uuid.UUID = Depends(get_actor_id)):
-    existing = db.query(Subscription).filter_by(recipient_id=actor_id, municipality=sub_in.municipality).first()
+@app.post("/api/alertas/subscriptions", response_model=SubscriptionResponse, status_code=201)
+def create_subscription(
+    data: SubscriptionCreate, db: Session = Depends(get_db), actor_id: UUID = Depends(get_actor_id)
+):
+    municipality = data.municipality.strip()
+    if not municipality:
+        raise HTTPException(status_code=422, detail="Municipio vacío")
+    existing = db.scalar(
+        select(Subscription).where(
+            Subscription.recipient_id == actor_id,
+            Subscription.municipality == municipality,
+        )
+    )
     if existing:
         return existing
-    
-    new_sub = Subscription(recipient_id=actor_id, municipality=sub_in.municipality)
-    db.add(new_sub)
+    subscription = Subscription(recipient_id=actor_id, municipality=municipality)
+    db.add(subscription)
     db.commit()
-    db.refresh(new_sub)
-    return new_sub
+    db.refresh(subscription)
+    return subscription
 
-@app.get("/api/alertas/subscriptions", response_model=List[SubscriptionResponse])
-def list_subscriptions(db: Session = Depends(get_db), actor_id: uuid.UUID = Depends(get_actor_id)):
-    return db.query(Subscription).filter_by(recipient_id=actor_id).all()
+
+@app.get("/api/alertas/subscriptions", response_model=list[SubscriptionResponse])
+def list_subscriptions(db: Session = Depends(get_db), actor_id: UUID = Depends(get_actor_id)):
+    return db.scalars(
+        select(Subscription)
+        .where(Subscription.recipient_id == actor_id)
+        .order_by(Subscription.created_at.desc())
+    ).all()
+
 
 @app.delete("/api/alertas/subscriptions/{sub_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_subscription(sub_id: uuid.UUID, db: Session = Depends(get_db), actor_id: uuid.UUID = Depends(get_actor_id)):
-    sub = db.query(Subscription).filter_by(id=sub_id, recipient_id=actor_id).first()
-    if not sub:
+def delete_subscription(
+    sub_id: UUID, db: Session = Depends(get_db), actor_id: UUID = Depends(get_actor_id)
+):
+    subscription = db.scalar(
+        select(Subscription).where(
+            Subscription.id == sub_id, Subscription.recipient_id == actor_id
+        )
+    )
+    if subscription is None:
         raise HTTPException(status_code=404, detail="Suscripción no encontrada")
-    db.delete(sub)
+    db.delete(subscription)
     db.commit()
-    return None
 
-@app.get("/api/alertas/inbox", response_model=List[AlertResponse])
-def get_inbox(db: Session = Depends(get_db), actor_id: uuid.UUID = Depends(get_actor_id)):
-    return db.query(Alert).filter_by(recipient_id=actor_id).order_by(Alert.created_at.desc()).all()
+
+@app.get("/api/alertas/inbox", response_model=list[AlertResponse])
+def get_inbox(db: Session = Depends(get_db), actor_id: UUID = Depends(get_actor_id)):
+    return db.scalars(
+        select(Alert)
+        .where(Alert.recipient_id == actor_id)
+        .order_by(Alert.created_at.desc())
+        .limit(100)
+    ).all()
+
+
+@app.get("/health/live")
+def health_live():
+    return {"status": "ok"}
+
 
 @app.get("/health/ready")
-def health_ready(db: Session = Depends(get_db)):
+def health_ready():
     try:
-        db.execute("SELECT 1")
-        return {"status": "ok"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except (SQLAlchemyError, OSError) as exc:
+        raise HTTPException(status_code=503, detail="Base de alertas no disponible") from exc
+    return {"status": "ready"}

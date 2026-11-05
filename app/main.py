@@ -6,7 +6,6 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.alerts.router import router as alerts_router
 from app.core.db import get_engine, init_db
 from app.identity.router import router as identity_router
 from app.pets.router import router as pets_router
@@ -26,7 +25,6 @@ app.include_router(web_router)
 app.include_router(identity_router)
 app.include_router(pets_router)
 app.include_router(reports_router)
-app.include_router(alerts_router)
 
 
 @app.get("/health/live", tags=["salud"])

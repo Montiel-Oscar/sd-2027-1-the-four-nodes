@@ -253,6 +253,7 @@ def test_missing_list_and_found_private_phone(setup):
 
 def test_internal_feed_requires_token_and_ack_is_idempotent(setup, monkeypatch):
     client, factory = setup
+    monkeypatch.delenv("INTERNAL_API_TOKEN", raising=False)
     unauthorized = client.get("/api/reportes/internal/events")
     assert unauthorized.status_code == 503
     monkeypatch.setenv("INTERNAL_API_TOKEN", "secret-for-test")

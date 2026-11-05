@@ -18,6 +18,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes
       AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?Genera INTERNAL_API_TOKEN en .env antes de iniciar}
     ports:
       - "8000:8000"
     depends_on:
@@ -26,6 +27,38 @@ services:
     volumes:
       - .:/workspace
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  init_alerts_db:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        psql -h db -U four_nodes -d four_nodes -tAc
+        "SELECT 1 FROM pg_database WHERE datname='four_nodes_alerts'"
+        | grep -q 1 || createdb -h db -U four_nodes four_nodes_alerts
+
+  alertas:
+    build: .
+    environment:
+      DATABASE_URL_ALERTS: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes_alerts
+      AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?Genera INTERNAL_API_TOKEN en .env antes de iniciar}
+      INTERNAL_API_URL: http://app:8000/api/reportes
+    ports:
+      - "8001:8001"
+    depends_on:
+      init_alerts_db:
+        condition: service_completed_successfully
+      app:
+        condition: service_started
+    volumes:
+      - .:/workspace
+    command: ["uvicorn", "app.alerts.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
 
 volumes:
   postgres_data:

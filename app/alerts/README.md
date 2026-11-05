@@ -1,9 +1,7 @@
-# Alertas · etapa posterior
+# Servicio de alertas · `02-separacion`
 
-Esta carpeta delimita el módulo de alertas dentro del monolito. Para **la primera entrega `01-monolito`**, el requisito es guardar un evento pendiente al publicar un extravío; Oscar lo hace en `app/reports/`. La bandeja y el servicio separado de alertas corresponden a `02-separacion` según [el PRD](../../docs/PRD.md).
+`app.alerts.main:app` se ejecuta en un proceso FastAPI propio, puerto 8001. Usa la base lógica `four_nodes_alerts` y solo consulta reportes mediante el feed HTTP interno. No importa ni escribe las tablas de reportes.
 
-No creen aquí un servicio, una base adicional ni un broker en la primera entrega. Si el flujo principal termina antes de tiempo, acuerden con el equipo una operación local mínima antes de modificar esta carpeta.
+`compose.yaml` le pasa `DATABASE_URL_ALERTS`, `AUTH_SECRET`, `INTERNAL_API_TOKEN` e `INTERNAL_API_URL`. El inicializador crea su base si no existe, incluso cuando el volumen viene de `01-monolito`. El trabajador consulta cada 10 segundos, guarda las alertas y luego confirma el evento; un reintento no duplica la bandeja por la restricción `(event_id, recipient_id)`.
 
-## Trabajo de Luisa en `02-separacion`
-
-Ahora sí crea `trabajo/luisa-alertas-v1` desde `02-separacion`. Esta carpeta será un proceso FastAPI independiente con su propia base lógica, suscripciones, bandeja y trabajador que consulta el feed de Oscar por HTTP. Sigue los pasos detallados de [PLAN_02_SEPARACION.md](../../docs/PLAN_02_SEPARACION.md#luisa--proceso-de-alertas-trabajoluisa-alertas-v1) y las rutas de [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md#alertas-luisa--amy). El worker confirma el evento solo después de confirmar alertas en su base; la restricción única por evento y destinatario evita duplicados en reintentos. Publica un PR con base `02-separacion` y demuestra que una caída de alertas no impide publicar.
+El contrato de suscripciones y bandeja está en [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md#alertas-luisa--amy). El estado de integración, las pruebas y lo que falta están en [ESTADO_02_SEPARACION.md](../../docs/ESTADO_02_SEPARACION.md).

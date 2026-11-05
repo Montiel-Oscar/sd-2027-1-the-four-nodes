@@ -2,12 +2,9 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL_ALERTS",
-    "postgresql://postgres:postgres@db:5432/four_nodes_alerts"
-)
+DATABASE_URL = os.environ["DATABASE_URL_ALERTS"]
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

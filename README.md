@@ -17,11 +17,11 @@ La rama `main` conserva la versión estable y la documentación. La rama `01-mon
 
 La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
 
-## Estado del monolito · 22 de octubre de 2026
+## Estado del monolito · 5 de noviembre de 2026
 
 La rama `01-monolito` integra mascotas, reportes, una cuenta de demostración y una interfaz web. Se puede publicar un extravío con una mascota nueva, reintentar sin duplicarlo y abrir su página pública. El reporte y el evento pendiente se guardan en una sola transacción. También se pueden registrar y consultar fichas propias de mascotas.
 
-Luisa entregó el módulo de mascotas en la [solicitud #2](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/2), Amy la interfaz en la [#3](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/3) y Oscar el módulo de reportes en la [#1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1). No se encontró rama ni solicitud de Cecilia; el mínimo de identidad de demostración se completó durante la integración. El registro real de usuarios y el envío de alertas corresponden a etapas posteriores del PRD.
+Luisa entregó mascotas en la [solicitud #2](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/2), Amy la interfaz en la [#3](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/3), Oscar reportes en la [#1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1) y Ceci verificó la identidad de demostración en la [#6](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/6). La rama `01-monolito` pasó 10 pruebas el 5 de noviembre de 2026.
 
 ## Levantar la aplicación
 
@@ -36,10 +36,19 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-`main` → versión estable. `01-monolito` → primera entrega ejecutable. `02-separacion` → versión 1 distribuida en desarrollo. Después vienen `03-identidad-gateway` y `04-resiliencia`, según el PRD. Las ramas personales de cada etapa parten de su rama de etapa y vuelven a ella mediante revisión del equipo.
+Las tres ramas permanentes son `main` (referencia del proyecto), `01-monolito` (primera entrega terminada) y `02-separacion` (segunda entrega en integración). Las ramas personales son temporales: parten de su rama de etapa y se borran después de integrar el PR. Las etapas posteriores del PRD todavía no tienen rama.
 
 ## Primera versión distribuida: `02-separacion`
 
-Esta rama inicia la separación entre reportes y alertas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos de API y eventos](docs/CONTRATOS_02_SEPARACION.md) y la [guía de trabajo](docs/COMO_TRABAJAR_02.md) definen qué debe implementar cada integrante y cómo integrar sus Pull Requests. **Es una rama en desarrollo**: `01-monolito` sigue siendo la versión funcional hasta que pasen las pruebas de aceptación de la nueva etapa.
+La rama `02-separacion` tiene dos procesos FastAPI y dos bases lógicas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos](docs/CONTRATOS_02_SEPARACION.md) y el [estado detallado](docs/ESTADO_02_SEPARACION.md) explican la implementación y lo pendiente.
 
-Oscar ya publicó su parte de reportes y outbox en el [PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4). Luisa, Ceci y Amy pueden trabajar en paralelo desde `02-separacion` siguiendo las instrucciones de su carpeta y los contratos comunes. El servicio de alertas, el login y las nuevas pantallas aún no están integrados en esta rama.
+### Lista de avance
+
+- [x] **Oscar:** hallazgos, listas públicas, publicación idempotente y feed/ACK del outbox ([PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4)).
+- [x] **Ceci:** registro, login, JWT y autorización compartida ([PR #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7)).
+- [x] **Luisa + integración:** API y trabajador de alertas, bandeja privada, segunda base lógica y Compose ([PR #5](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/5)); el PR entró por error a `main` y su commit se incorporó también a `02-separacion`.
+- [x] **Integración:** 34 pruebas automáticas; prueba HTTP de registro, hallazgo, entrega de alerta y bandeja privada.
+- [ ] **Amy:** nueva interfaz para registro/login, hallazgos, suscripciones y bandeja; adaptar el formulario de extravíos a Bearer JWT y crear la página pública de hallazgos. Aún no hay PR de esta etapa.
+- [ ] **Equipo, después de Amy:** prueba manual completa en móvil y escritorio y medición de alertas con hasta 20 suscriptores para confirmar el objetivo de 3 minutos.
+
+Para ejecutar la rama distribuida, generar dos secretos distintos con `python3 -c 'import secrets; print(secrets.token_hex(32))'`, colocarlos como `AUTH_SECRET` e `INTERNAL_API_TOKEN` en `.env`, y ejecutar `docker compose up --build -d`. Los servicios responden en `localhost:8000` y `localhost:8001`. La prueba HTTP repetible es `python3 scripts/smoke_02.py`.
