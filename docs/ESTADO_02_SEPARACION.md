@@ -33,7 +33,7 @@ El navegador de Amy se verificó con tres anchos, pero falta una revisión manua
 
 ## Lo que falta y quién lo hace
 
-La versión `02-separacion` cumple sus cuatro flujos básicos. El proyecto final todavía debe cerrar los compromisos adicionales del PRD y los entregables de la [rúbrica](../RUBRICA.md): PDF, pitch, identidad separada, gateway, dos réplicas de reportes y pruebas reproducibles de fallas. El [plan de cierre](PLAN_CIERRE_RUBRICA.md) asigna cada tarea. Esta rama aún no se incorpora a `main` como versión final.
+La versión `02-separacion` cumple los flujos básicos de reportes y alertas. La API de mascotas permite crear y consultar fichas, pero la web no permite registrar una por separado ni elegir una guardada para publicar; tampoco existe edición de ficha propia, aunque el PRD la menciona. El proyecto final todavía debe cerrar esos detalles y los compromisos adicionales del PRD y la [rúbrica](../RUBRICA.md): PDF, pitch, identidad separada, gateway, dos réplicas de reportes y pruebas reproducibles de fallas. El [plan de cierre](PLAN_CIERRE_RUBRICA.md) asigna cada tarea. Esta rama aún no se incorpora a `main` como versión final.
 
 ## Cómo continuar
 

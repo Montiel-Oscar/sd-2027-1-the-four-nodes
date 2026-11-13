@@ -52,6 +52,7 @@ La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante
 - [x] **Amy:** interfaz de registro/login, hallazgos, suscripciones, bandeja, Bearer JWT y páginas públicas ([PR #8](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/8)).
 - [x] **Integración:** 36 pruebas Python, prueba de navegador con APIs simuladas, flujo web real con dos cuentas y entrega de ambas alertas; publicación durante la caída de `alertas` y entrega única tras reiniciarlo.
 - [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; un ensayo local, pendiente convertirlo en prueba reproducible.
+- [ ] **Mascotas:** Luisa añade edición de ficha propia; Amy añade registro independiente y selección de una ficha guardada al publicar, como pide el PRD.
 - [ ] **Equipo:** completar y subir `docs/reporte-final.pdf`, preparar el pitch y la defensa técnica de cada integrante.
 - [ ] **Equipo:** cerrar la diferencia con el PRD final: identidad separada, gateway Traefik, dos copias de reportes y pruebas reproducibles de fallas; ver el [plan de cierre](docs/PLAN_CIERRE_RUBRICA.md).
 

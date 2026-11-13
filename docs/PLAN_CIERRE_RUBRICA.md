@@ -16,15 +16,16 @@ Cada persona crea una rama temporal desde `02-separacion` y abre PR **hacia `02-
 |---|---|---|---|
 | **Oscar Iván Montiel Juárez** | `trabajo/oscar-gateway-final` | `compose.yaml`, `traefik/`, `Dockerfile`, `docs/ARQUITECTURA_FINAL.md` | Traefik como entrada única y dos copias de reportes sin estado, con ruta pública y prueba de que una copia puede detenerse sin perder todas las solicitudes. **Esta tarea se deja asignada; no está implementada en este plan.** |
 | **Ceci Ximena Solís Cisneros** | `trabajo/ceci-identidad-final` | `app/identity/`, `app/core/auth.py`, nuevo punto de entrada de identidad, migración/inicialización de su base y pruebas | Identidad en proceso y base lógica propios; registro/login en el mismo contrato HTTP, JWT verificable localmente por reportes y alertas, y datos previos conservados o migrados sin borrar volúmenes. |
-| **Luisa María Segura Cedeño** | `trabajo/luisa-evidencia-final` | `scripts/`, `tests/`, `docs/RESULTADOS_FINALES.md`, `docs/reporte-final.pdf` | Ensayos reproducibles de 20 suscriptores, reintento/ACK, caída y reinicio de alertas, caída de PostgreSQL y persistencia; tabla de tiempos. Coordina y ensambla el PDF final con las secciones aportadas por todos. |
-| **Amy Valentina Veraza García** | `trabajo/amy-demo-final` | `app/web/`, `app/web/tests/`, `docs/pitch/` | Adaptar la web a una sola entrada por Traefik cuando esté disponible, conservar los flujos y el polling, revisar móvil/accesibilidad, dejar un guion de demo y preparar el pitch con intervenciones de los cuatro. |
+| **Luisa María Segura Cedeño** | `trabajo/luisa-evidencia-final` | `app/pets/`, `scripts/`, `tests/`, `docs/RESULTADOS_FINALES.md`, `docs/reporte-final.pdf` | Añadir edición de ficha propia conforme al PRD. Hacer ensayos reproducibles de 20 suscriptores, reintento/ACK, caídas y persistencia; tabla de tiempos. Coordina y ensambla el PDF final con las secciones aportadas por todos. |
+| **Amy Valentina Veraza García** | `trabajo/amy-demo-final` | `app/web/`, `app/web/tests/`, `docs/pitch/` | Permitir registrar una mascota por separado y elegir una ya guardada al publicar. Adaptar la web a una sola entrada por Traefik cuando esté disponible, revisar móvil/accesibilidad, dejar un guion de demo y preparar el pitch con intervenciones de los cuatro. |
 
 ### Contratos para trabajar en paralelo
 
 1. **Ceci ↔ Oscar:** mantener `POST /api/usuarios/register`, `POST /api/usuarios/login` y `GET /api/usuarios/me` iguales. Identidad expondrá internamente el puerto acordado en Compose; Oscar enrutará `/api/usuarios/` hacia ella. Reportes no debe consultar identidad al publicar, solo verificar JWT.
 2. **Oscar ↔ Amy:** la entrada final será una sola URL local, por ejemplo `http://localhost:8000`. Las llamadas web a alertas serán rutas relativas `/api/alertas/...` cuando Traefik esté activo. Amy puede preparar ese cambio sin tocar Compose.
 3. **Luisa ↔ todos:** los scripts de prueba usarán rutas y variables configurables para ejecutarse primero contra `02-separacion` y luego contra la arquitectura final. Las mediciones deberán registrar inicio, respuesta de publicación, creación de alerta y visualización en web; un único ensayo local de 5.55 s no es suficiente como evidencia final.
-4. **PDF:** cada integrante entrega a Luisa texto e imágenes originales de su parte. Luisa reúne portada, problema, dos diagramas, al menos tres decisiones con alternativas, fallas, instrucciones de ejecución, límites y contribuciones. El archivo final va exactamente en `docs/reporte-final.pdf`.
+4. **Luisa ↔ Amy:** Luisa es dueña de `app/pets/` y añade la ruta de edición propia. Amy consume las rutas existentes `GET/POST /api/mascotas` para registrar y elegir fichas; usa `pet_id` en `POST /api/reportes/extravios` cuando se elige una existente. Ambas acuerdan el contrato de edición sin tocar la carpeta de la otra.
+5. **PDF:** cada integrante entrega a Luisa texto e imágenes originales de su parte. Luisa reúne portada, problema, dos diagramas, al menos tres decisiones con alternativas, fallas, instrucciones de ejecución, límites y contribuciones. El archivo final va exactamente en `docs/reporte-final.pdf`.
 
 ## Criterios de aceptación por tarea
 
@@ -44,6 +45,7 @@ Cada persona crea una rama temporal desde `02-separacion` y abre PR **hacia `02-
 
 ### Luisa · resiliencia y PDF
 
+- Añadir actualización de nombre, especie o rasgos de una mascota **solo por su dueño**; comprobar 404/403 según el contrato elegido para otros usuarios y que un reporte ya publicado conserva su descripción original.
 - Un script repetible crea hasta 20 suscriptores, publica ambos tipos de reporte y comprueba alerta única para cada destinatario. Reporta tiempos en varias ejecuciones; la creación de alerta debe tardar menos de 2 min 30 s y la web abierta mostrarla en menos de 3 min.
 - Detener `alertas` no impide publicar; al reiniciarlo se procesa el evento una vez desde la perspectiva del usuario. Probar también reentrega tras ACK perdido o repetido, suscripción posterior al evento y reinicio de contenedores.
 - Detener PostgreSQL debe impedir confirmar una publicación no guardada. Documentar el fallo esperado y el regreso del servicio sin borrar datos.
@@ -51,6 +53,7 @@ Cada persona crea una rama temporal desde `02-separacion` y abre PR **hacia `02-
 
 ### Amy · web, demo y pitch
 
+- La web permite registrar una ficha sin publicar, listar las propias y elegir una al crear un extravío. También conserva la opción de crear ficha y reporte juntos; comprobar ambas rutas con cuentas distintas.
 - Registro, login, extravío, hallazgo, filtros, suscripción, bandeja y páginas públicas funcionan desde la entrada final. Las solicitudes privadas llevan Bearer y las públicas no lo exigen.
 - Probar con Chrome/Edge y en un teléfono o emulación a 390 px y escritorio. Verificar teclado, foco visible, errores 401/409/red, teléfono con y sin consentimiento, enlace copiable, bandeja vacía y cierre de sesión.
 - El guion del pitch muestra problema, solución y demo real en el tiempo asignado por el profesor. Cada integrante presenta una parte; preparar una ruta de demostración de respaldo y capturas si falla la red local.
@@ -69,6 +72,7 @@ Cada persona crea una rama temporal desde `02-separacion` y abre PR **hacia `02-
 - [x] Prototipo distribuido básico funcionando en `02-separacion`: cuatro flujos, dos procesos y dos bases lógicas.
 - [x] Arranque y prueba local iniciales; 36 pruebas Python, navegador simulado y navegador real con dos cuentas.
 - [ ] Arquitectura final del PRD, o PRD actualizado con una decisión explícita y defendible.
+- [ ] Registro independiente, reutilización y edición de mascotas según las historias del PRD.
 - [ ] Pruebas de falla y tiempos automatizadas y repetibles con evidencia.
 - [ ] README de arranque en limpio sin pasos escondidos.
 - [ ] `docs/reporte-final.pdf` con todos los apartados obligatorios.
