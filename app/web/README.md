@@ -1,6 +1,8 @@
 ﻿# Amy · interfaz de extravíos
 
-Rama: `trabajo/amy-web`, creada desde `01-monolito`.
+La etapa actual se documenta en [Interfaz distribuida y verificación](VERIFICACION_V1.md), rama `trabajo/amy-web-v1` con destino `02-separacion`.
+
+El resto de este documento conserva el historial de `trabajo/amy-web`, creada desde `01-monolito`.
 
 ## Implementado
 

@@ -22,3 +22,18 @@ def test_public_page_validates_report_id():
     assert response.status_code == 200
     assert 'id="report"' in response.text
     assert client.get("/reportes/extravios/invalid").status_code == 422
+
+
+def test_distributed_pages_and_scripts():
+    response = client.get("/comunidad")
+    assert response.status_code == 200
+    for form in ("account-form", "found-form", "subscription-form", "filter-form"):
+        assert f'id="{form}"' in response.text
+    for script in ("session.js", "community.js"):
+        assert client.get(f"/web/{script}").status_code == 200
+    assert client.get("/reportes/hallazgos/12345678-1234-1234-1234-123456789abc").status_code == 200
+    assert client.get("/reportes/hallazgos/invalid").status_code == 422
+
+
+def test_photo_route_does_not_serve_arbitrary_files():
+    assert client.get("/web/photos/session.js").status_code == 404

@@ -34,3 +34,23 @@ def photo(filename: str):
     if filename not in {"golden.jpg", "dog.jpg"}:
         raise HTTPException(status_code=404, detail="Fotografia no encontrada")
     return FileResponse(STATIC / "photos" / filename, media_type="image/jpeg")
+
+
+@router.get("/comunidad", response_class=FileResponse)
+def community():
+    return FileResponse(STATIC / "community.html")
+
+
+@router.get("/reportes/hallazgos/{report_id}", response_class=FileResponse)
+def public_found_report(report_id: UUID):
+    return FileResponse(STATIC / "report.html")
+
+
+@router.get("/web/session.js", include_in_schema=False)
+def session_javascript():
+    return FileResponse(STATIC / "session.js", media_type="text/javascript")
+
+
+@router.get("/web/community.js", include_in_schema=False)
+def community_javascript():
+    return FileResponse(STATIC / "community.js", media_type="text/javascript")
