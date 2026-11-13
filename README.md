@@ -52,6 +52,7 @@ La [rúbrica final](RUBRICA.md) y el [nuevo reparto de cierre](https://github.co
 - [x] **Amy:** interfaz distribuida con JWT, hallazgos, suscripciones y bandeja ([PR #8](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/8)).
 - [x] **Integración:** 36 pruebas Python, navegador simulado y flujo real de dos cuentas, hallazgo, extravío, páginas públicas y alertas en `02-separacion`.
 - [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; falta repetirlo mediante un script de evidencia.
+- [ ] **Mascotas:** Luisa añade edición de ficha propia; Amy añade registro independiente y selección de una ficha guardada al publicar, como pide el PRD.
 - [ ] **Equipo:** PDF final, pitch y defensa individual.
 - [ ] **Equipo:** cerrar compromisos adicionales del PRD: identidad separada, Traefik, dos copias de reportes y pruebas de fallas reproducibles, o documentar un ajuste honesto del alcance.
 
