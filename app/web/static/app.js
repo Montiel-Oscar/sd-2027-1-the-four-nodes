@@ -8,10 +8,11 @@ async function readResponse(response) {
   let data;
   try { data = await response.json(); } catch { throw new Error("El servidor no devolvió una respuesta válida. Intenta de nuevo."); }
   if (!response.ok) {
+    if (response.status === 401) window.FourNodes.setToken(null);
     if (Array.isArray(data.detail)) {
       throw new Error(data.detail.map(error => `${labels[error.loc?.at(-1)] || "Formulario"}: revisa el valor ingresado.`).join(" "));
     }
-    const messages = {404:"No encontramos este reporte. Comprueba el enlace.",409:"Este intento tiene un conflicto. Revisa los datos antes de volver a publicar.",422:"Revisa los campos del formulario.",503:"El servicio no está disponible. Intenta de nuevo en un momento."};
+    const messages = {401:"Inicia sesi?n para continuar. Tu formulario se conserva.",404:"No encontramos este reporte. Comprueba el enlace.",409:"Este intento tiene un conflicto. Revisa los datos antes de volver a publicar.",422:"Revisa los campos del formulario.",503:"El servicio no está disponible. Intenta de nuevo en un momento."};
     throw new Error(messages[response.status] || "No se pudo completar la solicitud. Intenta de nuevo.");
   }
   return data;
@@ -41,7 +42,7 @@ if (form) {
     button.disabled = true;
     say("Publicando…");
     try {
-      const data = await readResponse(await fetch("/api/reportes/extravios", {method:"POST",headers:{"Content-Type":"application/json","Idempotency-Key":attempt.key},body:attempt.body}));
+      const data = await readResponse(await fetch("/api/reportes/extravios", {method:"POST",headers:{"Content-Type":"application/json","Idempotency-Key":attempt.key,...window.FourNodes.authHeaders()},body:attempt.body}));
       if (!data.id) throw new Error("La respuesta no incluye el identificador del reporte. Intenta de nuevo.");
       shareUrl = new URL(`/reportes/extravios/${encodeURIComponent(data.id)}`, location.origin).href;
       const link = document.querySelector("#public-link");
@@ -55,15 +56,16 @@ if (form) {
       statusBox.focus();
     } finally { button.disabled = false; }
   });
-} else {
+} else if (document.querySelector("#report")) {
   (async () => {
     try {
       const id = location.pathname.split("/").filter(Boolean).at(-1);
-      const data = await readResponse(await fetch(`/api/reportes/extravios/${encodeURIComponent(id)}`));
-      document.querySelector("#pet-name").textContent = `${data.pet.name} está en búsqueda`;
-      document.title = `${data.pet.name} · Reporte de extravío`;
-      document.querySelector("#pet-species").textContent = data.pet.species;
-      document.querySelector("#pet-traits").textContent = data.pet.traits;
+      const kind = location.pathname.includes("/hallazgos/") ? "hallazgos" : "extravios";
+      const data = await readResponse(await fetch(`/api/reportes/${kind}/${encodeURIComponent(id)}`));
+      document.querySelector("#pet-name").textContent = data.pet ? `${data.pet.name} está en búsqueda` : "Mascota encontrada";
+      document.title = data.pet ? `${data.pet.name} · Reporte de extravío` : "Hallazgo · The Four Nodes";
+      document.querySelector("#pet-species").textContent = data.pet?.species || "Hallazgo";
+      document.querySelector("#pet-traits").textContent = data.pet?.traits || data.description;
       const locationList = document.querySelector("#location");
       for (const [label,value] of [["Fecha y hora",new Date(data.seen_at).toLocaleString("es-MX",{dateStyle:"long",timeStyle:"short"})],["Municipio o alcaldía",data.municipality],["Colonia",data.neighborhood],["Referencia",data.landmark]]) {
         const term = document.createElement("dt"); term.textContent = label;
@@ -79,7 +81,7 @@ if (form) {
     } catch (error) { say(error instanceof TypeError ? "No pudimos cargar el reporte. Comprueba tu conexión y recarga la página." : error.message); }
   })();
 }
-document.querySelector("#copy-link").addEventListener("click", async () => {
+document.querySelector("#copy-link")?.addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(shareUrl); say("Enlace copiado."); }
   catch { say(`Copia este enlace: ${shareUrl}`); }
 });
