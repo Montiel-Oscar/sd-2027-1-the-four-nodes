@@ -42,13 +42,17 @@ Las tres ramas permanentes son `main` (referencia del proyecto), `01-monolito` (
 
 El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md) y los [contratos](docs/CONTRATOS_02_SEPARACION.md) siguen vigentes. El [estado detallado](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/blob/02-separacion/docs/ESTADO_02_SEPARACION.md) vive en `02-separacion`.
 
+La [rúbrica final](RUBRICA.md) y el [nuevo reparto de cierre](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/blob/02-separacion/docs/PLAN_CIERRE_RUBRICA.md) fijan los pendientes para la entrega del **28 de noviembre antes de las 07:00** (hora de Ciudad de México).
+
 ### Lista de avance
 
 - [x] **Oscar:** reportes de hallazgo, listas y outbox HTTP ([PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4)).
 - [x] **Ceci:** registro, login y JWT compartido ([PR #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7)).
 - [x] **Luisa + integración:** servicio de alertas, segunda base lógica y Compose ([PR #5](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/5)); su PR se fusionó originalmente en `main`, y el trabajo se incorporó también a `02-separacion`.
-- [x] **Integración:** 34 pruebas automáticas y prueba HTTP de hallazgo, alerta y bandeja privada; publicación durante la caída de `alertas` y entrega única tras reiniciarlo en `02-separacion`.
-- [ ] **Amy:** interfaz distribuida: login, hallazgos, suscripciones, bandeja y adaptación del formulario de extravío a JWT. Todavía no hay PR de esta etapa.
-- [ ] **Equipo:** tras integrar a Amy, revisión en móvil y escritorio y medición de alertas con hasta 20 suscriptores.
+- [x] **Amy:** interfaz distribuida con JWT, hallazgos, suscripciones y bandeja ([PR #8](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/8)).
+- [x] **Integración:** 36 pruebas Python, navegador simulado y flujo real de dos cuentas, hallazgo, extravío, páginas públicas y alertas en `02-separacion`.
+- [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; falta repetirlo mediante un script de evidencia.
+- [ ] **Equipo:** PDF final, pitch y defensa individual.
+- [ ] **Equipo:** cerrar compromisos adicionales del PRD: identidad separada, Traefik, dos copias de reportes y pruebas de fallas reproducibles, o documentar un ajuste honesto del alcance.
 
-La API distribuida ya funciona; la web de `02-separacion` todavía conserva el formulario del monolito y no completa el flujo con JWT. Para probar el backend, cambiar a `02-separacion` y seguir su README. `main` aún no sustituye a esa rama como entrega distribuida.
+La aplicación web distribuida funciona en `02-separacion`. Para ejecutarla, cambiar a esa rama y seguir su README. `main` aún no sustituye a esa rama como entrega final.
