@@ -12,7 +12,7 @@ async function readResponse(response) {
     if (Array.isArray(data.detail)) {
       throw new Error(data.detail.map(error => `${labels[error.loc?.at(-1)] || "Formulario"}: revisa el valor ingresado.`).join(" "));
     }
-    const messages = {401:"Inicia sesi?n para continuar. Tu formulario se conserva.",404:"No encontramos este reporte. Comprueba el enlace.",409:"Este intento tiene un conflicto. Revisa los datos antes de volver a publicar.",422:"Revisa los campos del formulario.",503:"El servicio no está disponible. Intenta de nuevo en un momento."};
+    const messages = {401:"Inicia sesión para continuar. Tu formulario se conserva.",404:"No encontramos este reporte. Comprueba el enlace.",409:"Este intento tiene un conflicto. Revisa los datos antes de volver a publicar.",422:"Revisa los campos del formulario.",503:"El servicio no está disponible. Intenta de nuevo en un momento."};
     throw new Error(messages[response.status] || "No se pudo completar la solicitud. Intenta de nuevo.");
   }
   return data;

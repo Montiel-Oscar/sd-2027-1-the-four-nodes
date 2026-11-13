@@ -42,13 +42,17 @@ Las tres ramas permanentes son `main` (referencia del proyecto), `01-monolito` (
 
 La rama `02-separacion` tiene dos procesos FastAPI y dos bases lógicas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos](docs/CONTRATOS_02_SEPARACION.md) y el [estado detallado](docs/ESTADO_02_SEPARACION.md) explican la implementación y lo pendiente.
 
+La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante](docs/PLAN_CIERRE_RUBRICA.md) guían la entrega del **28 de noviembre de 2026 antes de las 07:00** (hora de Ciudad de México).
+
 ### Lista de avance
 
 - [x] **Oscar:** hallazgos, listas públicas, publicación idempotente y feed/ACK del outbox ([PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4)).
 - [x] **Ceci:** registro, login, JWT y autorización compartida ([PR #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7)).
 - [x] **Luisa + integración:** API y trabajador de alertas, bandeja privada, segunda base lógica y Compose ([PR #5](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/5)); el PR entró por error a `main` y su commit se incorporó también a `02-separacion`.
-- [x] **Integración:** 34 pruebas automáticas; prueba HTTP de registro, hallazgo, entrega de alerta y bandeja privada; publicación durante la caída de `alertas` y entrega única tras reiniciarlo.
-- [ ] **Amy:** nueva interfaz para registro/login, hallazgos, suscripciones y bandeja; adaptar el formulario de extravíos a Bearer JWT y crear la página pública de hallazgos. Aún no hay PR de esta etapa.
-- [ ] **Equipo, después de Amy:** prueba manual completa en móvil y escritorio y medición de alertas con hasta 20 suscriptores para confirmar el objetivo de 3 minutos.
+- [x] **Amy:** interfaz de registro/login, hallazgos, suscripciones, bandeja, Bearer JWT y páginas públicas ([PR #8](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/8)).
+- [x] **Integración:** 36 pruebas Python, prueba de navegador con APIs simuladas, flujo web real con dos cuentas y entrega de ambas alertas; publicación durante la caída de `alertas` y entrega única tras reiniciarlo.
+- [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; un ensayo local, pendiente convertirlo en prueba reproducible.
+- [ ] **Equipo:** completar y subir `docs/reporte-final.pdf`, preparar el pitch y la defensa técnica de cada integrante.
+- [ ] **Equipo:** cerrar la diferencia con el PRD final: identidad separada, gateway Traefik, dos copias de reportes y pruebas reproducibles de fallas; ver el [plan de cierre](docs/PLAN_CIERRE_RUBRICA.md).
 
 Para ejecutar la rama distribuida, generar dos secretos distintos con `python3 -c 'import secrets; print(secrets.token_hex(32))'`, colocarlos como `AUTH_SECRET` e `INTERNAL_API_TOKEN` en `.env`, y ejecutar `docker compose up --build -d`. Los servicios responden en `localhost:8000` y `localhost:8001`. La prueba HTTP repetible es `python3 scripts/smoke_02.py`.

@@ -24,11 +24,11 @@ Get-Content -Raw app/web/static/session.js | node --check
 Get-Content -Raw app/web/static/community.js | node --check
 ```
 
-36 pruebas Python aprobadas y sintaxis válida en los tres scripts. La prueba de navegador requiere Playwright y Microsoft Edge instalados en el Python que la ejecuta.
+36 pruebas Python aprobadas y sintaxis válida en los tres scripts. La prueba de navegador requiere Playwright y Microsoft Edge; en Linux se puede usar Chrome con `PLAYWRIGHT_BROWSER=/usr/bin/google-chrome python app/web/tests/verify_browser.py`.
 
 Edge usa APIs simuladas: verifica registro, Bearer, hallazgo y extravío con respuesta perdida y reintento con la misma clave, nueva clave al cambiar cuerpo, consentimiento, suscripción, consulta periódica, cierre de sesión y reporte público con texto que parece HTML. Comprueba ausencia de desbordamiento a 390, 768 y 1440 px. Las simulaciones verifican el cliente; no demuestran entrega real de alertas ni persistencia.
 
-No se ejecutó la demo con Docker/PostgreSQL porque el motor Docker no estaba disponible. La aceptación distribuida y la medición con 20 suscriptores siguen pendientes.
+Durante el desarrollo del PR no se ejecutó la demo con Docker/PostgreSQL porque el motor Docker no estaba disponible. En la integración del 13 de noviembre se ejecutaron los servicios reales: dos cuentas publicaron un hallazgo y un extravío desde el navegador, abrieron sus páginas públicas y recibieron ambas alertas. También se verificaron 20 suscriptores por HTTP; todos recibieron la alerta en 5.55 s desde la respuesta de publicación. Los detalles están en [ESTADO_02_SEPARACION.md](../../docs/ESTADO_02_SEPARACION.md).
 
 ## Demo reproducible con servicios reales
 

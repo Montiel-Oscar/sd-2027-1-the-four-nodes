@@ -3,6 +3,7 @@
 Requiere playwright y Microsoft Edge. No sustituye la demo con PostgreSQL.
 """
 import json
+import os
 import time
 from pathlib import Path
 
@@ -61,7 +62,10 @@ def main():
             route.fulfill(status=404)
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(channel="msedge", headless=True)
+        browser_path = os.getenv("PLAYWRIGHT_BROWSER")
+        browser = playwright.chromium.launch(
+            executable_path=browser_path, headless=True
+        ) if browser_path else playwright.chromium.launch(channel="msedge", headless=True)
         page = browser.new_page()
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.clock.install()
