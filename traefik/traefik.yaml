@@ -1,0 +1,15 @@
+entryPoints:
+  web:
+    address: ":80"
+  legacyAlerts:
+    address: ":8001"
+  internal:
+    address: ":8080"
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yaml
+    watch: true
+
+log:
+  level: INFO

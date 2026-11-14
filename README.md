@@ -23,7 +23,7 @@ La rama `01-monolito` integra mascotas, reportes, una cuenta de demostración y 
 
 Luisa entregó mascotas en la [solicitud #2](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/2), Amy la interfaz en la [#3](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/3), Oscar reportes en la [#1](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/1) y Ceci verificó la identidad de demostración en la [#6](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/6). La rama `01-monolito` pasó 10 pruebas el 5 de noviembre de 2026.
 
-## Levantar la aplicación
+## Levantar el monolito histórico
 
 En la rama `01-monolito`, con Docker y Docker Compose instalados:
 
@@ -38,9 +38,9 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 Las tres ramas permanentes son `main` (referencia del proyecto), `01-monolito` (primera entrega terminada) y `02-separacion` (segunda entrega en integración). Las ramas personales son temporales: parten de su rama de etapa y se borran después de integrar el PR. Las etapas posteriores del PRD todavía no tienen rama.
 
-## Primera versión distribuida: `02-separacion`
+## Versión distribuida: `02-separacion`
 
-La rama `02-separacion` tiene dos procesos FastAPI y dos bases lógicas. El [plan de cuatro tareas](docs/PLAN_02_SEPARACION.md), los [contratos](docs/CONTRATOS_02_SEPARACION.md) y el [estado detallado](docs/ESTADO_02_SEPARACION.md) explican la implementación y lo pendiente.
+La rama `02-separacion` tiene Traefik, dos réplicas de reportes, un proceso de alertas y dos bases lógicas en PostgreSQL. El [diagrama y comportamiento ante fallas](docs/ARQUITECTURA_FINAL.md), los [contratos](docs/CONTRATOS_02_SEPARACION.md) y el [estado detallado](docs/ESTADO_02_SEPARACION.md) explican la implementación y lo pendiente.
 
 La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante](docs/PLAN_CIERRE_RUBRICA.md) guían la entrega del **28 de noviembre de 2026 antes de las 07:00** (hora de Ciudad de México).
 
@@ -52,8 +52,31 @@ La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante
 - [x] **Amy:** interfaz de registro/login, hallazgos, suscripciones, bandeja, Bearer JWT y páginas públicas ([PR #8](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/8)).
 - [x] **Integración:** 36 pruebas Python, prueba de navegador con APIs simuladas, flujo web real con dos cuentas y entrega de ambas alertas; publicación durante la caída de `alertas` y entrega única tras reiniciarlo.
 - [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; un ensayo local, pendiente convertirlo en prueba reproducible.
+- [x] **Oscar:** Traefik, dos réplicas de reportes, feed interno aislado y prueba de publicación y alerta con una réplica detenida. La tercera base de identidad sigue pendiente de Ceci.
+- [ ] **Ceci:** separar identidad en proceso y base propios, migrar los datos existentes y enrutar `/api/usuarios` hacia ese proceso.
 - [ ] **Mascotas:** Luisa añade edición de ficha propia; Amy añade registro independiente y selección de una ficha guardada al publicar, como pide el PRD.
-- [ ] **Equipo:** completar y subir `docs/reporte-final.pdf`, preparar el pitch y la defensa técnica de cada integrante.
-- [ ] **Equipo:** cerrar la diferencia con el PRD final: identidad separada, gateway Traefik, dos copias de reportes y pruebas reproducibles de fallas; ver el [plan de cierre](docs/PLAN_CIERRE_RUBRICA.md).
+- [ ] **Amy:** adaptar la web al origen único y entregar guion, demo y pitch para los cuatro.
+- [ ] **Luisa:** pruebas repetibles de fallas y tiempos; reunir las aportaciones del equipo en `docs/reporte-final.pdf`.
+- [ ] **Oscar:** integrar los PR finales, probar el arranque en limpio y fusionar `02-separacion` a `main` antes de la entrega.
 
-Para ejecutar la rama distribuida, generar dos secretos distintos con `python3 -c 'import secrets; print(secrets.token_hex(32))'`, colocarlos como `AUTH_SECRET` e `INTERNAL_API_TOKEN` en `.env`, y ejecutar `docker compose up --build -d`. Los servicios responden en `localhost:8000` y `localhost:8001`. La prueba HTTP repetible es `python3 scripts/smoke_02.py`.
+### Arranque y pruebas de `02-separacion`
+
+Con Docker, Docker Compose y Python 3 instalados, desde la raíz del repositorio:
+
+```bash
+git switch 02-separacion
+python3 scripts/setup_env.py
+docker compose up --build -d
+python3 scripts/smoke_02.py
+python3 scripts/verify_gateway.py
+```
+
+Abrir `http://localhost:8000/`, `http://localhost:8000/docs` y `http://localhost:8000/health/ready`. `setup_env.py` crea `.env` con claves locales si falta y conserva las existentes, para no invalidar un volumen previo. `.env` no se sube a Git. La web actual todavía puede llamar al puerto `8001`, servido también por Traefik como compatibilidad hasta que Amy integre el origen único. `verify_gateway.py` detiene y reinicia una réplica y crea datos de prueba. Si se viene de una versión anterior de Compose, ejecutar una vez `docker compose down --remove-orphans` antes de `up`; este comando conserva el volumen. Para detener: `docker compose down`.
+
+La suite Python se ejecuta sin instalar dependencias en el host:
+
+```bash
+docker compose run --rm --volume "$PWD:/workspace" reportes_a sh -c "pip install -q '.[dev]' && pytest -q"
+```
+
+Las instrucciones individuales y todos los pendientes de la última entrega están en [docs/PLAN_CIERRE_RUBRICA.md](docs/PLAN_CIERRE_RUBRICA.md). Cada compañera crea su rama temporal desde `02-separacion` y abre un PR hacia `02-separacion`.
