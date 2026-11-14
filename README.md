@@ -56,8 +56,8 @@ La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante
 - [ ] **Ceci:** separar identidad en proceso y base propios, migrar los datos existentes y enrutar `/api/usuarios` hacia ese proceso.
 - [ ] **Mascotas:** Luisa añade edición de ficha propia; Amy añade registro independiente y selección de una ficha guardada al publicar, como pide el PRD.
 - [ ] **Amy:** adaptar la web al origen único y entregar guion, demo y pitch para los cuatro.
-- [ ] **Luisa:** pruebas repetibles de fallas y tiempos; reunir las aportaciones del equipo en `docs/reporte-final.pdf`.
-- [ ] **Oscar:** integrar los PR finales, probar el arranque en limpio y fusionar `02-separacion` a `main` antes de la entrega.
+- [ ] **Luisa:** pruebas repetibles de fallas y tiempos; entregar resultados para el reporte final.
+- [ ] **Oscar:** integrar los PR finales, elaborar `docs/reporte-final.pdf` cuando el trabajo esté listo, probar el arranque en limpio y fusionar `02-separacion` a `main` antes de la entrega.
 
 ### Arranque y pruebas de `02-separacion`
 

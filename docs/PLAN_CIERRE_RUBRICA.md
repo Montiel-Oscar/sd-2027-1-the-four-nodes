@@ -30,9 +30,9 @@ En GitHub Desktop se puede hacer la misma secuencia: Fetch/Pull de `02-separacio
 
 | Responsable | Rama temporal sugerida | Archivos principales | Resultado que debe entregar |
 |---|---|---|---|
-| **Oscar Iván Montiel Juárez** | `trabajo/oscar-gateway-final` | `compose.yaml`, `traefik/`, `Dockerfile`, `scripts/verify_gateway.py`, `docs/ARQUITECTURA_FINAL.md` | **Entregado:** Traefik como entrada, dos copias de reportes sin estado y prueba de caída de una copia. **Pendiente posterior:** integrar los PR finales, retirar el puerto temporal 8001 tras el cambio de Amy, revisar arquitectura y README, probar desde cero y fusionar `02-separacion` a `main`. |
+| **Oscar Iván Montiel Juárez** | `trabajo/oscar-gateway-final` | `compose.yaml`, `traefik/`, `Dockerfile`, `scripts/verify_gateway.py`, `docs/ARQUITECTURA_FINAL.md`, `docs/reporte-final.pdf` | **Entregado:** Traefik como entrada, dos copias de reportes sin estado y prueba de caída de una copia. **Pendiente posterior:** integrar los PR finales, elaborar el PDF final cuando el trabajo esté listo, retirar el puerto temporal 8001, revisar arquitectura y README, probar desde cero y fusionar `02-separacion` a `main`. |
 | **Ceci Ximena Solís Cisneros** | `trabajo/ceci-identidad-final` | `app/identity/`, `app/core/auth.py`, nuevo punto de entrada de identidad, migración/inicialización de su base y pruebas | Identidad en proceso y base lógica propios; registro/login en el mismo contrato HTTP, JWT verificable localmente por reportes y alertas, y datos previos conservados o migrados sin borrar volúmenes. |
-| **Luisa María Segura Cedeño** | `trabajo/luisa-evidencia-final` | `app/pets/`, `scripts/`, `tests/`, `docs/RESULTADOS_FINALES.md`, `docs/reporte-final.pdf` | Añadir edición de ficha propia conforme al PRD. Hacer ensayos reproducibles de 20 suscriptores, reintento/ACK, caídas y persistencia; tabla de tiempos. Coordina y ensambla el PDF final con las secciones aportadas por todos. |
+| **Luisa María Segura Cedeño** | `trabajo/luisa-evidencia-final` | `app/pets/`, `scripts/`, `tests/`, `docs/RESULTADOS_FINALES.md` | Añadir edición de ficha propia conforme al PRD. Hacer ensayos reproducibles de 20 suscriptores, reintento/ACK, caídas y persistencia; tabla de tiempos. Entrega a Oscar resultados y explicación de las fallas para el PDF. |
 | **Amy Valentina Veraza García** | `trabajo/amy-demo-final` | `app/web/`, `app/web/tests/`, `docs/pitch/` | Permitir registrar una mascota por separado y elegir una ya guardada al publicar. Adaptar la web a una sola entrada por Traefik cuando esté disponible, revisar móvil/accesibilidad, dejar un guion de demo y preparar el pitch con intervenciones de los cuatro. |
 
 ### Contratos para trabajar en paralelo
@@ -41,22 +41,22 @@ En GitHub Desktop se puede hacer la misma secuencia: Fetch/Pull de `02-separacio
 2. **Oscar ↔ Amy:** la entrada final será `http://localhost:8000`. Las llamadas web a alertas serán rutas relativas `/api/alertas/...`. El puerto 8001 actual pasa por Traefik y existe solo para que la web anterior siga funcionando durante la transición. Tras integrar a Amy, Oscar lo elimina de Compose y del router legado.
 3. **Luisa ↔ todos:** los scripts de prueba usarán rutas y variables configurables para ejecutarse primero contra `02-separacion` y luego contra la arquitectura final. Las mediciones deberán registrar inicio, respuesta de publicación, creación de alerta y visualización en web; un único ensayo local de 5.55 s no es suficiente como evidencia final.
 4. **Luisa ↔ Amy:** Luisa es dueña de `app/pets/` y añade la ruta de edición propia. Amy consume las rutas existentes `GET/POST /api/mascotas` para registrar y elegir fichas; usa `pet_id` en `POST /api/reportes/extravios` cuando se elige una existente. Ambas acuerdan el contrato de edición sin tocar la carpeta de la otra.
-5. **PDF:** cada integrante entrega a Luisa texto e imágenes originales de su parte. Luisa reúne portada, problema, dos diagramas, al menos tres decisiones con alternativas, fallas, instrucciones de ejecución, límites y contribuciones. El archivo final va exactamente en `docs/reporte-final.pdf`.
+5. **PDF:** cada integrante entrega a Oscar texto, resultados e imágenes originales de su parte. Cuando estén listos los cambios y evidencias, Oscar reúne portada, problema, dos diagramas, al menos tres decisiones con alternativas, fallas, instrucciones de ejecución, límites y contribuciones. El archivo final va exactamente en `docs/reporte-final.pdf`.
 
 ### Aportaciones concretas para el PDF
 
-| Apartado obligatorio | Responsable de entregar material a Luisa |
+| Apartado obligatorio | Responsable de entregar material a Oscar |
 |---|---|
-| Portada, nombres, enlace al repositorio y contribuciones verificadas con commits | Luisa recopila; cada integrante confirma su parte |
-| Problema, público y recorrido funcional | Amy; Luisa redacta y revisa |
+| Portada, nombres, enlace al repositorio y contribuciones verificadas con commits | Oscar recopila; cada integrante confirma su parte |
+| Problema, público y recorrido funcional | Amy aporta; Oscar redacta y revisa |
 | Diagrama funcional y capturas de ambos reportes, suscripción y bandeja | Amy |
 | Diagrama de arquitectura, rutas, datos y comunicación | Oscar; Ceci actualiza la identidad separada |
 | Tres decisiones con alternativas descartadas | Oscar: gateway y réplicas frente a un proceso; Ceci: JWT local frente a consulta sincrónica; Luisa: outbox y ACK frente a aviso dentro de la publicación |
 | Caídas, recuperación y tiempos medidos en varias ejecuciones | Luisa, con script y tabla reproducibles |
-| Arranque y prueba sin pasos ocultos | Oscar aporta comandos; Luisa ejecuta y registra resultados |
-| Límites, pendientes y qué harían distinto | Los cuatro aportan; Luisa consolida |
+| Arranque y prueba sin pasos ocultos | Oscar ejecuta y registra; Luisa aporta los resultados de fallas |
+| Límites, pendientes y qué harían distinto | Los cuatro aportan; Oscar consolida |
 
-Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Luisa sube el PDF final. Oscar verifica que ambos artefactos existan en GitHub antes del merge final. Cada persona ensaya su minuto y puede explicar la ruta completa de una petición y una falla.
+Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Oscar sube el PDF final después de integrar las aportaciones. Oscar verifica que ambos artefactos existan en GitHub antes del merge final. Cada persona ensaya su minuto y puede explicar la ruta completa de una petición y una falla.
 
 ## Criterios de aceptación por tarea
 
@@ -66,6 +66,7 @@ Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Luisa sube el PDF 
 - La página inicial, `/api/usuarios/`, `/api/mascotas/`, `/api/reportes/` y `/api/alertas/` responden desde un solo origen. La API interna del outbox no se expone al navegador por accidente.
 - Dos procesos de reportes comparten su base y la clave de firma. Después de detener uno, el otro sigue respondiendo; los reintentos de publicación conservan la `Idempotency-Key`.
 - El README y un diagrama muestran la entrada, el descubrimiento por DNS, el balanceo, la base de cada servicio y el comportamiento ante caída. Aporta esa sección al PDF y prepara una explicación de aproximadamente un minuto.
+- Cuando estén integrados los resultados de todos, elaborar `docs/reporte-final.pdf`, comprobar que abre y cubre los nueve apartados de la rúbrica, y subirlo antes del límite de entrega.
 
 ### Ceci · identidad separada
 
@@ -74,13 +75,13 @@ Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Luisa sube el PDF 
 - Detener identidad no impide publicar con un JWT vigente; crear una cuenta o iniciar sesión sí falla de forma clara mientras está detenido.
 - Aporta al PDF el diagrama de propiedad de datos y la decisión de verificar el token localmente. Prepara una explicación de aproximadamente un minuto.
 
-### Luisa · resiliencia y PDF
+### Luisa · mascotas y resiliencia
 
 - Añadir actualización de nombre, especie o rasgos de una mascota **solo por su dueño**; comprobar 404/403 según el contrato elegido para otros usuarios y que un reporte ya publicado conserva su descripción original.
 - Un script repetible crea hasta 20 suscriptores, publica ambos tipos de reporte y comprueba alerta única para cada destinatario. Reporta tiempos en varias ejecuciones; la creación de alerta debe tardar menos de 2 min 30 s y la web abierta mostrarla en menos de 3 min.
 - Detener `alertas` no impide publicar; al reiniciarlo se procesa el evento una vez desde la perspectiva del usuario. Probar también reentrega tras ACK perdido o repetido, suscripción posterior al evento y reinicio de contenedores.
 - Detener PostgreSQL debe impedir confirmar una publicación no guardada. Documentar el fallo esperado y el regreso del servicio sin borrar datos.
-- El PDF final se puede abrir, incluye todos los nueve puntos de la rúbrica, atribuye trabajo real a cada persona y contiene resultados medidos. Prepara una explicación de aproximadamente un minuto sobre consistencia eventual y fallas.
+- Entregar a Oscar `docs/RESULTADOS_FINALES.md` con comandos, tabla de tiempos, resultados de fallas y explicación para el PDF. Prepara una explicación de aproximadamente un minuto sobre consistencia eventual y fallas.
 
 ### Amy · web, demo y pitch
 
@@ -95,8 +96,8 @@ Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Luisa sube el PDF 
 1. **Hasta el 18 de noviembre:** Oscar integra su gateway primero. Ceci, Luisa y Amy actualizan su rama temporal desde `02-separacion` antes del PR. Cada PR muestra qué cambió, cómo se ejecutó y resultados. La documentación y el pitch avanzan desde el primer día.
 2. **Hasta el 21 de noviembre:** integrar Ceci y su nueva base de identidad. Tras el merge, correr la suite, `scripts/smoke_02.py`, `scripts/verify_gateway.py` y el flujo web real. Si falla un flujo básico, reparar antes del siguiente merge.
 3. **Hasta el 24 de noviembre:** integrar Amy y Luisa con las pruebas finales. Cada cambio se incorpora a `02-separacion`; las ramas temporales se borran después de fusionar. La demo debe tener un comando de arranque y un guion estable.
-4. **Hasta el 26 de noviembre:** Luisa ensambla `docs/reporte-final.pdf`; el equipo revisa que los diagramas describan el código realmente entregado. Ensayar el pitch con cámara y preguntas cruzadas.
-5. **27 de noviembre:** Oscar realiza la prueba en limpio siguiendo solo el README, revisa con Luisa el PDF y con Amy las slides, comprueba las contribuciones de los cuatro y fusiona `02-separacion` a `main` si todo pasa. Subir antes de las 07:00 del **28 de noviembre**.
+4. **Hasta el 26 de noviembre:** con los PR y evidencias integrados, Oscar elabora `docs/reporte-final.pdf`; el equipo revisa que los diagramas describan el código realmente entregado. Ensayar el pitch con cámara y preguntas cruzadas.
+5. **27 de noviembre:** Oscar realiza la prueba en limpio siguiendo solo el README, verifica el PDF con el equipo y las slides con Amy, comprueba las contribuciones de los cuatro y fusiona `02-separacion` a `main` si todo pasa. Subir antes de las 07:00 del **28 de noviembre**.
 
 ## Checklist de la rúbrica
 
@@ -108,6 +109,6 @@ Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Luisa sube el PDF 
 - [ ] Pruebas de falla y tiempos automatizadas y repetibles con evidencia.
 - [x] README con comando de arranque y secretos generados localmente (Oscar).
 - [ ] Ejecutar el README en un entorno limpio tras todos los PR y registrar el resultado (Oscar).
-- [ ] `docs/reporte-final.pdf` con todos los apartados obligatorios (Luisa reúne; Oscar/Ceci/Amy aportan sus secciones y figuras).
+- [ ] `docs/reporte-final.pdf` con todos los apartados obligatorios (Oscar elabora; Ceci/Luisa/Amy aportan material y resultados).
 - [ ] Pitch y diapositivas (Amy coordina), demo ensayada (Amy), y cada integrante preparado para la defensa técnica (responsabilidad individual).
 - [ ] Fusionar `02-separacion` a `main` y comprobar que el commit, PDF y slides estén en GitHub antes del límite (Oscar).
