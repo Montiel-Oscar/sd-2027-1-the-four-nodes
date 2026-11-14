@@ -13,20 +13,36 @@ services:
       timeout: 3s
       retries: 10
 
-  app:
+  init_report_db:
     build: .
     environment:
       DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes
-      AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
-      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?Genera INTERNAL_API_TOKEN en .env antes de iniciar}
-    ports:
-      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - .:/workspace
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["python", "-c", "from app.core.db import init_db; init_db()"]
+
+  reportes_a:
+    build: .
+    environment: &report_environment
+      DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes
+      AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?Genera INTERNAL_API_TOKEN en .env antes de iniciar}
+      INSTANCE_NAME: reportes_a
+    depends_on:
+      init_report_db:
+        condition: service_completed_successfully
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  reportes_b:
+    build: .
+    environment:
+      <<: *report_environment
+      INSTANCE_NAME: reportes_b
+    depends_on:
+      init_report_db:
+        condition: service_completed_successfully
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
   init_alerts_db:
     image: postgres:16-alpine
@@ -48,17 +64,30 @@ services:
       DATABASE_URL_ALERTS: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes_alerts
       AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?Genera INTERNAL_API_TOKEN en .env antes de iniciar}
-      INTERNAL_API_URL: http://app:8000/api/reportes
-    ports:
-      - "8001:8001"
+      INTERNAL_API_URL: http://gateway:8080/api/reportes
     depends_on:
       init_alerts_db:
         condition: service_completed_successfully
-      app:
+      reportes_a:
         condition: service_started
+    command: ["uvicorn", "app.alerts.main:app", "--host", "0.0.0.0", "--port", "8001"]
+
+  gateway:
+    image: traefik:v3.3.7
     volumes:
-      - .:/workspace
-    command: ["uvicorn", "app.alerts.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+      - ./traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./traefik/dynamic.yaml:/etc/traefik/dynamic.yaml:ro
+    ports:
+      - "8000:80"
+      # Transición: la web de Amy aún usa localhost:8001 para alertas.
+      - "8001:8001"
+    depends_on:
+      reportes_a:
+        condition: service_started
+      reportes_b:
+        condition: service_started
+      alertas:
+        condition: service_started
 
 volumes:
   postgres_data:
