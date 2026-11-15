@@ -30,7 +30,7 @@ if (form) {
     if (!form.reportValidity()) return;
     const fields = form.elements;
     const payload = {
-      pet: {name:fields.name.value,species:fields.species.value,traits:fields.traits.value},
+      ...(fields.pet_id.value ? {pet_id:fields.pet_id.value} : {pet: {name:fields.name.value,species:fields.species.value,traits:fields.traits.value}}),
       seen_at:new Date(fields.seen_at.value).toISOString(),
       municipality:fields.municipality.value,neighborhood:fields.neighborhood.value,landmark:fields.landmark.value,
       show_phone:consent.checked

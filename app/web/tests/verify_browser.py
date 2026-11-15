@@ -18,10 +18,13 @@ def main():
     fail_publication = True
     inbox_calls = 0
     errors = []
+    pets = []
+    next_error = 0
 
     def serve(route):
-        nonlocal fail_publication, inbox_calls
+        nonlocal fail_publication, inbox_calls, next_error
         request = route.request
+        assert request.url.startswith("http://localhost:8000/"), request.url
         path = request.url.split("localhost:8000")[-1].split("localhost:8001")[-1]
         path = path.split("?")[0]
         headers = {"Access-Control-Allow-Origin": "http://localhost:8000"}
@@ -32,7 +35,18 @@ def main():
             calls.append((path, request.method, request.headers, request.post_data))
             data = []
             status = 200
-            if path.endswith("/register"):
+            if next_error:
+                code, next_error = next_error, 0
+                route.fulfill(status=code, json={"detail":"Error de prueba"})
+                return
+            if path == "/api/mascotas":
+                if request.method == "POST":
+                    data = {"id":REPORT_ID, **json.loads(request.post_data)}
+                    pets.append(data)
+                    status = 201
+                else:
+                    data = pets if request.headers.get("authorization") == "Bearer test-session-token" else []
+            elif path.endswith("/register"):
                 data = {"id": REPORT_ID, "email": "amy@example.org"}
                 status = 201
             elif path.endswith("/login"):
@@ -83,6 +97,13 @@ def main():
         expect(page.locator("#session-state")).to_have_text("Sesión iniciada")
         expect(page.locator("#inbox a")).to_have_attribute("href", f"/reportes/hallazgos/{REPORT_ID}")
         assert page.evaluate("localStorage.length") == 0
+        pet_form = page.locator("#pet-form")
+        pet_form.locator('[name="name"]').fill("Luna")
+        pet_form.locator('[name="species"]').select_option("perro")
+        pet_form.locator('[name="traits"]').fill("Collar azul")
+        pet_form.get_by_role("button").click()
+        expect(page.locator("#pets-list h3")).to_have_text("Luna")
+        assert not any(call[1] == "POST" and "/reportes/" in call[0] for call in calls)
         form = page.locator("#found-form")
         for name, value in {"description":"Perro con collar rojo", "seen_at":"2026-11-12T10:30", "municipality":"Coyoacán", "neighborhood":"Centro", "landmark":"Parque"}.items():
             form.locator(f'[name="{name}"]').fill(value)
@@ -101,6 +122,9 @@ def main():
         latest = [call for call in calls if call[0].endswith("/hallazgos") and call[1] == "POST"][-1]
         assert latest[2]["idempotency-key"] != publications[0][2]["idempotency-key"]
         assert json.loads(latest[3])["public_phone"] == "5551234567"
+        next_error = 409
+        form.get_by_role("button").click()
+        expect(page.locator("#found-status")).to_contain_text("Conflicto")
         page.locator("#subscription-form input").fill("Coyoacán")
         page.locator("#subscription-form button").click()
         expect(page.locator("#subscriptions-status")).to_contain_text("reportes nuevos")
@@ -114,6 +138,7 @@ def main():
         assert inbox_calls > before
         page.get_by_role("button", name="Cerrar sesión").click()
         expect(page.locator("#inbox")).to_be_empty()
+        expect(page.locator("#pets-list")).to_be_empty()
         assert page.evaluate("sessionStorage.length") == 0
         page.goto(f"http://localhost:8000/reportes/hallazgos/{REPORT_ID}")
         expect(page.locator("#pet-traits")).to_have_text("<img src=x onerror=alert(1)>")
@@ -142,6 +167,28 @@ def main():
         missing = [call for call in calls if call[0].endswith("/extravios") and call[1] == "POST"]
         assert missing[0][2]["authorization"] == "Bearer test-session-token"
         assert missing[0][2]["idempotency-key"] == missing[1][2]["idempotency-key"]
+        page.goto(f"http://localhost:8000/?pet_id={REPORT_ID}")
+        expect(page.locator("#saved-pet")).to_have_value(REPORT_ID)
+        expect(page.locator('#publish-form [name="name"]')).to_be_disabled()
+        page.locator("#wizard-next").click()
+        for name, value in {"seen_at":"2026-11-15T10:30", "municipality":"Coyoacán", "neighborhood":"Centro", "landmark":"Parque"}.items():
+            page.locator(f'#publish-form [name="{name}"]').fill(value)
+        page.locator("#wizard-next").click()
+        page.locator("#wizard-next").click()
+        page.locator('#publish-form button[type="submit"]').click()
+        expect(page.locator("#success")).to_be_visible()
+        existing = [call for call in calls if call[0].endswith("/extravios") and call[1] == "POST"][-1]
+        assert json.loads(existing[3])["pet_id"] == REPORT_ID
+        assert "pet" not in json.loads(existing[3])
+        page.goto("http://localhost:8000/comunidad")
+        expect(page.locator("#pets-list h3")).to_have_text("Luna")
+        next_error = 401
+        page.locator("#refresh-pets").click()
+        expect(page.locator("#session-state")).to_contain_text("Inicia sesión")
+        expect(page.locator("#pets-list")).to_be_empty()
+        page.get_by_role("link", name="Cuenta", exact=True).focus()
+        page.keyboard.press("Tab")
+        assert page.evaluate("document.activeElement.textContent") == "Mis mascotas"
         assert not errors, errors
         browser.close()
     print("OK: registro, JWT, hallazgo y extravío con reintentos, consentimiento, suscripción, polling, cierre de sesión, reporte público y 3 anchos.")

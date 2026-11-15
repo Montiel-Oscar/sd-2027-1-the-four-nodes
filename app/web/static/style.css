@@ -21,3 +21,14 @@
 @media(max-width:580px){.community main{padding:16px!important}.community section{padding:18px}.community h1{font-size:30px}.community header{gap:12px;flex-wrap:wrap}.community .brand{padding-left:0}}
 
 .inline-account{padding:18px;border:1px solid var(--line);border-radius:12px;background:white;margin:16px 0}.inline-account summary{cursor:pointer}.inline-account form{display:grid;gap:12px;max-width:480px;margin-top:16px}.inline-account label{display:grid;gap:6px}.inline-account input{width:100%;box-sizing:border-box}
+
+/* Cierre: foco, contraste y fichas en ambos anchos. */
+.section-nav a{color:#405f52}.section-nav a.active,.primary-link{background:#08765d;color:white}
+.community select{width:100%;min-width:0}.community a:not(.brand){text-decoration:underline;text-underline-offset:3px}
+.saved-pets{display:grid;gap:10px;border:1px solid #bad6ca;border-radius:10px;padding:14px}
+.saved-pets a{color:#12634d;text-decoration:underline}.saved-pets p{font-size:13px;color:#405f52;margin:0}
+button,a,input,select,textarea,summary{scroll-margin:24px}
+:focus-visible{outline:3px solid #805b00;outline-offset:4px}
+input:disabled,select:disabled,textarea:disabled{opacity:1;background:#eef3f0;color:#405f52}
+.community #pets-list{margin-top:20px}.community #refresh-pets{margin-top:16px}
+@media(max-width:580px){.community input,.community textarea,.community select{font-size:16px}.saved-pets select{max-width:100%}}
