@@ -214,6 +214,8 @@ def main():
     args = parser.parse_args()
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
+    # Si un nuevo ensayo falla, no conservar un sello de éxito del ensayo anterior.
+    (output / "entorno.json").unlink(missing_ok=True)
     with sync_playwright() as playwright:
         browser_path = os.getenv("PLAYWRIGHT_BROWSER")
         browser = playwright.chromium.launch(executable_path=browser_path, headless=True) if browser_path else playwright.chromium.launch(channel="msedge", headless=True)
