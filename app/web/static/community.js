@@ -1,7 +1,7 @@
 "use strict";
 const api = window.FourNodes;
-// El contrato local publica alertas en el puerto 8001.
-const alertsOrigin = "http://localhost:8001";
+// Traefik dirige las rutas relativas al proceso de alertas.
+const alertsOrigin = "";
 const $ = selector => document.querySelector(selector);
 function status(id, message) { $(id).textContent = message; }
 function message(error) { return error instanceof TypeError ? "No pudimos conectar con el servicio. Reintenta; conservamos los datos del formulario." : error.message; }

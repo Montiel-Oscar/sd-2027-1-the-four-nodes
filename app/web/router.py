@@ -54,3 +54,8 @@ def session_javascript():
 @router.get("/web/community.js", include_in_schema=False)
 def community_javascript():
     return FileResponse(STATIC / "community.js", media_type="text/javascript")
+
+
+@router.get("/web/pets.js", include_in_schema=False)
+def pets_javascript():
+    return FileResponse(STATIC / "pets.js", media_type="text/javascript")
