@@ -22,87 +22,66 @@ Las pantallas corresponden a Amy; el proceso de alertas corresponde a Luisa.
 - Las pruebas anteriores de reportes sustituyen `get_actor_id` por un actor de
   prueba. No hay acceso automático como demo en las rutas privadas reales.
 
-## Configuración local
+Cecilia verificó el actor fijo de `app/core/auth.py` y el flujo con mascotas y reportes en la [solicitud #6](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/6). Esta cuenta de demostración es compartida por todos los visitantes locales. La autenticación real está integrada en `02-separacion` mediante la [solicitud #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7).
 
-1. Copiar `.env.example` a `.env` si aún no existe. Conservar la contraseña de
-   PostgreSQL existente para reutilizar el volumen.
-2. Generar un secreto con Python:
+## Verificación de la entrega de identidad
 
-   ```bash
-   python -c "import secrets; print(secrets.token_hex(32))"
-   ```
+El actor demo y `/api/usuarios/me` ya estaban implementados durante la integración.
+Esta rama documenta su contrato y añade una prueba de integración con los routers
+reales de identidad, mascotas y reportes, sin atribuirse la implementación previa.
 
-3. Pegar el resultado en `.env` como `AUTH_SECRET=valor_generado`. Debe tener
-   al menos 32 bytes. No subir `.env`, no pegar el secreto en el PR.
-4. Ejecutar `docker compose up --build -d` y abrir `http://localhost:8000/docs`.
+- `DEMO_USER_ID` es un UUID fijo definido una sola vez en `app/core/auth.py`.
+- `get_actor_id()` entrega ese UUID. Los endpoints privados lo reciben mediante
+  `Depends(get_actor_id)` y lo guardan como `owner_id`.
+- `GET /api/usuarios/me` responde con `id` y `mode: demo` sin requerir credenciales.
+- No existe una tabla de cuentas para esta etapa: el actor es lógico y compartido.
+  Reiniciar la aplicación no cambia su ID.
 
-La tabla de usuarios se crea durante el arranque con la metadata existente.
-No se necesita borrar el volumen. Las mascotas/reportes de la cuenta demo
-anterior conservan su dueño original; no se asignan automáticamente a cuentas
-nuevas.
+### Comprobarlo manualmente
 
-## Comprobar registro e inicio de sesión
+1. Copiar `.env.example` a `.env` y ejecutar `docker compose up --build`.
+2. Abrir `http://localhost:8000/docs` y ejecutar `GET /api/usuarios/me` dos veces.
+   Ambas respuestas deben contener `00000000-0000-4000-8000-000000000001`.
+3. Ejecutar `POST /api/mascotas` con nombre, especie y rasgos; conservar su `id`.
+4. Ejecutar `GET /api/mascotas`: debe incluir la ficha creada.
+5. Ejecutar `POST /api/reportes/extravios` con ese `pet_id`, una cabecera
+   `Idempotency-Key` y los campos del contrato. Debe responder 201.
+6. Consultar el reporte con `GET /api/reportes/extravios/{id}` sin credenciales.
 
-En `/docs`, ejecutar:
+### Pruebas automatizadas
 
-1. `POST /api/usuarios/register` con
-   `{"email":"persona@example.org","password":"una-clave-de-8-o-mas"}`.
-   Devuelve 201 con `id` y correo. Repetir el correo, incluso cambiando sus
-   mayúsculas, devuelve 409. Un correo inválido o contraseña fuera de 8–1024
-   caracteres devuelve 422. La contraseña no se recorta ni cambia de caso.
-2. `POST /api/usuarios/login` con los mismos datos. Devuelve `access_token`
-   y `token_type: bearer`. Credenciales incorrectas devuelven 401.
-3. Pulsar **Authorize** y pegar únicamente el token en el campo de HTTPBearer.
-4. `GET /api/usuarios/me` devuelve el ID y correo de la cuenta.
-5. Crear una mascota y publicar un extravío con esa ficha. Con otra cuenta,
-   esa mascota no aparece en la lista propia y consultarla devuelve 404.
-6. Sin token, o con uno inválido/vencido, las rutas privadas devuelven 401 y
-   `WWW-Authenticate: Bearer`. Los reportes públicos continúan accesibles.
-7. Reiniciar con `docker compose restart`; iniciar sesión de nuevo y comprobar
-   que la cuenta, mascotas y reportes siguen guardados.
+Con Python 3.12 o posterior y las dependencias de desarrollo instaladas:
 
-Si `AUTH_SECRET` falta o tiene menos de 32 bytes, la emisión o comprobación de
-un token responde 503: no se utiliza un secreto por defecto.
-
-## Integración con alertas
-
-Luisa debe pasar **el mismo `AUTH_SECRET`** al proceso `alertas` y reutilizar
-`Depends(get_actor_id)` de `app.core.auth`. Ese módulo solo requiere FastAPI,
-PyJWT y el secreto; no necesita la base de identidad ni llamadas HTTP a `app`.
-El token emitido por login sirve en ambos procesos. Las cuentas se guardan
-únicamente en `four_nodes`. Cambiar el secreto invalida los tokens anteriores.
-
-Este PR solo incorpora la variable en el servicio `app`; al integrar la rama
-de alertas, su Compose también debe transmitirla al nuevo servicio. No crea
-el trabajador, las suscripciones ni las pantallas de login.
-
-## Pruebas
-
-```bash
+```powershell
 python -m pip install -e '.[dev]'
-python -m pytest -q
+python -m pytest tests/test_identity.py tests/test_identity_integration.py -q
 ```
 
-`tests/test_identity.py` comprueba registro, normalización/unicidad, Argon2id,
-credenciales incorrectas, respuestas sin contraseñas, expiración, alteración,
-firma/emisor/algoritmo/claims inválidos, configuración ausente y aislamiento
-entre dos usuarios. También valida el mismo token en otra app FastAPI sin
-sesión de base de datos, para comprobar su uso por alertas.
+La prueba de integración usa SQLite en memoria para comprobar que la mascota y
+el reporte guardan el mismo dueño que devuelve identidad. También sustituye el
+actor mediante `dependency_overrides[get_actor_id]`: otro actor no puede listar
+ni consultar esa ficha, mientras el reporte continúa siendo público. No sustituye
+la verificación manual con PostgreSQL y Docker Compose.
 
-Las pruebas rápidas usan SQLite en memoria; el esquema de prueba adapta los
-UUID de PostgreSQL a CHAR para evitar conversiones numéricas de SQLite.
-La validación con Docker utiliza PostgreSQL y conserva el volumen anterior.
+### Paso a autenticación real
 
-## Resultado de verificación
+En la siguiente entrega se conservará el nombre `get_actor_id` y su retorno UUID,
+pero se obtendrá el identificador de un token validado. Los módulos consumidores
+no deben importar `DEMO_USER_ID` ni aceptar un dueño enviado en el formulario.
+Identidad incorporará cuentas, hashes y emisión de tokens. Las pruebas podrán
+seguir sustituyendo la dependencia; las rutas públicas permanecerán públicas.
 
-- **30 pruebas aprobadas** en la suite completa.
-- Docker Compose y PostgreSQL: registro de dos cuentas, correo duplicado,
-  contraseña incorrecta, login, `/me`, acceso privado y propiedad de mascotas.
-- Comprobación directa de hashes Argon2id y `owner_id` en PostgreSQL.
-- Publicación y reintento de extravío con Bearer; consulta pública sin token.
-- Token validado desde un segundo contenedor sin conexión a la base de usuarios.
-- Reinicio de app y PostgreSQL: cuenta, contraseña protegida, login, token,
-  mascota y reporte conservados. Volumen previo del monolito preservado.
+### Resultados de verificación
 
-La integración completa con el servicio de alertas y las pantallas se verifica
-cuando se incorporen las ramas de Luisa y Amy.
+- Suite completa: **10 pruebas aprobadas** (`python -m pytest -q`).
+- Docker Compose levanta la aplicación y PostgreSQL; `/health/ready` responde 200.
+- `/api/usuarios/me` conserva el mismo UUID en solicitudes sucesivas.
+- Una mascota y un extravío creados por la API guardan ese UUID como `owner_id`
+  en PostgreSQL.
+- Repetir la publicación con la misma clave devuelve el mismo reporte.
+- Después de `docker compose restart`, la identidad, la mascota, el reporte y
+  su página pública siguen disponibles.
+
+## Siguiente entrega
+
+En `02-separacion`, Ceci añadió registro, login y JWT. El contrato está en [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md) y el [estado de integración](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/blob/02-separacion/docs/ESTADO_02_SEPARACION.md) está en esa rama.
