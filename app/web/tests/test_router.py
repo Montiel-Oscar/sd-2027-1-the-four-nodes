@@ -27,9 +27,9 @@ def test_public_page_validates_report_id():
 def test_distributed_pages_and_scripts():
     response = client.get("/comunidad")
     assert response.status_code == 200
-    for form in ("account-form", "found-form", "subscription-form", "filter-form"):
+    for form in ("account-form", "pet-form", "found-form", "subscription-form", "filter-form"):
         assert f'id="{form}"' in response.text
-    for script in ("session.js", "community.js"):
+    for script in ("session.js", "community.js", "pets.js"):
         assert client.get(f"/web/{script}").status_code == 200
     assert client.get("/reportes/hallazgos/12345678-1234-1234-1234-123456789abc").status_code == 200
     assert client.get("/reportes/hallazgos/invalid").status_code == 422
