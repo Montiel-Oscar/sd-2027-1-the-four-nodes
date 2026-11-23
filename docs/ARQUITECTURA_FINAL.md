@@ -51,6 +51,6 @@ python3 scripts/verify_gateway.py
 ## Trabajo pendiente para que el diagrama sea definitivo
 
 - **Ceci:** proceso y tercera base lógica de identidad; cambiar la ruta `identidad` de `traefik/dynamic.yaml` a su servicio y retirar las tablas/rutas de identidad de reportes.
-- **Amy:** llamar `/api/alertas` desde el mismo origen; al integrar su PR, Oscar puede quitar el puerto de compatibilidad `8001` del gateway.
+- **Oscar:** Amy ya cambió las llamadas web a `/api/alertas` en el mismo origen; quitar el puerto de compatibilidad `8001` del gateway y actualizar las pruebas que lo usen.
 - **Luisa:** medir repetidamente la recuperación y los tiempos de alerta; entregar resultados y explicación de fallas a Oscar.
 - **Oscar:** revisar el diagrama después de integrar los PR, elaborar el PDF final con las aportaciones del equipo y hacer la prueba final en limpio antes de fusionar `02-separacion` a `main`.
