@@ -55,7 +55,7 @@ La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante
 - [x] **Oscar:** Traefik, dos réplicas de reportes, feed interno aislado y prueba de publicación y alerta con una réplica detenida. La tercera base de identidad sigue pendiente de Ceci.
 - [ ] **Ceci:** separar identidad en proceso y base propios, migrar los datos existentes y enrutar `/api/usuarios` hacia ese proceso.
 - [x] **Amy:** registro independiente y selección de fichas, llamadas web al mismo origen, guion y diapositivas para los cuatro ([PR #15](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/15)). Recorrido real con dos cuentas, PostgreSQL y Traefik verificado en Chrome.
-- [ ] **Luisa:** edición de ficha propia, pruebas repetibles de fallas y tiempos; entregar resultados para el reporte final.
+- [x] **Luisa:** edición de ficha propia y pruebas automatizadas ([PR #17](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/17)).
 - [ ] **Luisa:** pruebas repetibles de fallas y tiempos; entregar resultados para el reporte final.
 - [ ] **Oscar:** integrar los PR finales, elaborar `docs/reporte-final.pdf` cuando el trabajo esté listo, probar el arranque en limpio y fusionar `02-separacion` a `main` antes de la entrega.
 
