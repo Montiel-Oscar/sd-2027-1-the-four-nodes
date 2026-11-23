@@ -1,4 +1,4 @@
-"""Sesión y metadata compartidas solo en la etapa monolítica."""
+"""Sesión y metadata de identidad, mascotas y reportes."""
 
 import os
 from functools import lru_cache
@@ -27,7 +27,6 @@ def get_session() -> Iterator[Session]:
 
 def init_db() -> None:
     # Importar los modelos para registrar sus tablas en la metadata común.
-    from app.alerts import models as alerts_models  # noqa: F401
     from app.identity import models as identity_models  # noqa: F401
     from app.pets import models as pets_models  # noqa: F401
     from app.reports import models as reports_models  # noqa: F401

@@ -1,12 +1,12 @@
 """Punto de entrada del monolito. Cada equipo agrega rutas en su propio módulo."""
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.alerts.router import router as alerts_router
 from app.core.db import get_engine, init_db
 from app.identity.router import router as identity_router
 from app.pets.router import router as pets_router
@@ -22,11 +22,17 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="The Four Nodes", version="0.1.0", lifespan=lifespan)
 
+
+@app.middleware("http")
+async def identify_replica(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Report-Instance"] = os.getenv("INSTANCE_NAME", "app")
+    return response
+
 app.include_router(web_router)
 app.include_router(identity_router)
 app.include_router(pets_router)
 app.include_router(reports_router)
-app.include_router(alerts_router)
 
 
 @app.get("/health/live", tags=["salud"])

@@ -1,12 +1,26 @@
-# Cecilia · identidad de la primera entrega
+# Ceci · identidad de `02-separacion`
 
-**Rama de partida:** `01-monolito`. Antes de editar: `git switch 01-monolito`, `git pull origin 01-monolito` y `git switch -c trabajo/cecilia-identidad`. En GitHub Desktop, selecciona la rama base, actualízala y crea tu rama personal.
+Rama personal: `trabajo/ceci-identidad-v1`, creada desde `02-separacion`.
+El Pull Request se dirige a **`02-separacion`**.
 
-El [PRD](../../docs/PRD.md) permite una cuenta de demostración en esta rama. Revisa `app/core/auth.py` y deja una dependencia `get_actor_id` estable para Oscar y Luisa. Si añades registro e inicio de sesión, deben seguir siendo parte de **esta única aplicación y base**; no crees otro servicio todavía.
+Esta etapa sustituye la cuenta demo por cuentas reales dentro del proceso `app`
+y su base `four_nodes`. El contrato está en
+[CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md).
+Las pantallas corresponden a Amy; el proceso de alertas corresponde a Luisa.
 
-**Entregable mínimo:** un actor de demostración consistente y una prueba que muestre que las operaciones privadas reciben su ID. Documenta cómo sustituirlo por autenticación real. Si completas registro e inicio de sesión, añade pruebas de contraseña incorrecta y de acceso sin sesión. Publica tu rama y solicita integración hacia `01-monolito`.
+## Implementación
 
-## Estado integrado
+- `models.py`: tabla `users`, UUID, correo único en minúsculas, hash Argon2id
+  con sal por cuenta y fecha de alta UTC. No se guardan contraseñas en claro.
+- `router.py`: registro, login y cuenta actual; las respuestas excluyen hashes
+  y contraseñas, incluidos los errores de validación.
+- `app/core/auth.py`: emisión y verificación JWT HS256 con `sub` UUID,
+  `iss=the-four-nodes` y `exp` a 60 minutos. `get_actor_id` conserva su nombre.
+- La validación del token no importa modelos ni consulta la base de usuarios.
+  `/me` sí consulta la cuenta para devolver el correo.
+- `compose.yaml` pasa `AUTH_SECRET` del entorno al contenedor `app`.
+- Las pruebas anteriores de reportes sustituyen `get_actor_id` por un actor de
+  prueba. No hay acceso automático como demo en las rutas privadas reales.
 
 Cecilia verificó el actor fijo de `app/core/auth.py` y el flujo con mascotas y reportes en la [solicitud #6](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/6). Esta cuenta de demostración es compartida por todos los visitantes locales. La autenticación real está integrada en `02-separacion` mediante la [solicitud #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7).
 

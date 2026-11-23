@@ -1,0 +1,53 @@
+http:
+  routers:
+    # El feed del outbox existe solamente en el puerto interno 8080.
+    outbox-internal:
+      entryPoints: [internal]
+      rule: "PathPrefix(`/api/reportes/internal`)"
+      service: reportes
+      priority: 100
+    alertas:
+      entryPoints: [web, legacyAlerts]
+      rule: "PathPrefix(`/api/alertas`)"
+      service: alertas
+      priority: 50
+    alertas-health-legacy:
+      entryPoints: [legacyAlerts]
+      rule: "PathPrefix(`/health`)"
+      service: alertas
+      priority: 20
+    alertas-docs-legacy:
+      entryPoints: [legacyAlerts]
+      rule: "Path(`/docs`) || Path(`/openapi.json`)"
+      service: alertas
+      priority: 20
+    # Ceci cambiará este servicio al proceso identidad sin modificar la URL pública.
+    identidad:
+      entryPoints: [web]
+      rule: "PathPrefix(`/api/usuarios`)"
+      service: reportes
+      priority: 40
+    reportes-publicos:
+      entryPoints: [web]
+      rule: "PathPrefix(`/`) && !PathPrefix(`/api/reportes/internal`)"
+      service: reportes
+      priority: 1
+
+  services:
+    reportes:
+      loadBalancer:
+        healthCheck:
+          path: /health/ready
+          interval: 2s
+          timeout: 1s
+        servers:
+          - url: http://reportes_a:8000
+          - url: http://reportes_b:8000
+    alertas:
+      loadBalancer:
+        healthCheck:
+          path: /health/ready
+          interval: 2s
+          timeout: 1s
+        servers:
+          - url: http://alertas:8001

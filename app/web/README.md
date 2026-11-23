@@ -1,6 +1,10 @@
 ﻿# Amy · interfaz de extravíos
 
-Rama: `trabajo/amy-web`, creada desde `01-monolito`.
+El cierre actual se documenta en [Demo final y rúbrica](VERIFICACION_FINAL.md), rama `trabajo/amy-demo-final` con destino `02-separacion`. El pitch, las slides y las capturas están en [docs/pitch](../../docs/pitch/README.md).
+
+La etapa distribuida anterior se documenta en [Interfaz distribuida y verificación](VERIFICACION_V1.md).
+
+El resto de este documento conserva el historial de `trabajo/amy-web`, creada desde `01-monolito`.
 
 ## Implementado
 
