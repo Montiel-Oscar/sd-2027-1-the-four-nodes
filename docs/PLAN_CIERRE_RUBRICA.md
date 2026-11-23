@@ -1,10 +1,10 @@
-# Plan de cierre del proyecto final · 14 de noviembre de 2026
+# Plan de cierre del proyecto final · 22 de noviembre de 2026
 
 **Entrega:** sábado 28 de noviembre de 2026, **antes de las 07:00**, hora de Ciudad de México. El código y `docs/reporte-final.pdf` deben estar en el repositorio antes de ese momento. Cada integrante debe explicar su contribución en el pitch y defender las decisiones técnicas.
 
 ## Estado y prioridad
 
-La rama `02-separacion` ya permite registrar mascotas, publicar extravíos y hallazgos, seguir un municipio y leer alertas desde la web. Se probó con Docker, PostgreSQL y navegador real; la suite tiene 36 pruebas aprobadas. Oscar añadió Traefik y dos réplicas de reportes: la prueba de caída de una réplica pasó. La [rúbrica](../RUBRICA.md) acepta incluso un monolito modular si funciona y está bien explicado. **El PDF, el pitch y la demo reproducible son entregables obligatorios, además del código.**
+La rama `02-separacion` ya permite registrar mascotas, publicar extravíos y hallazgos, seguir un municipio y leer alertas desde la web. Se probó con Docker, PostgreSQL y navegador real; la suite tiene 36 pruebas aprobadas. Oscar añadió Traefik y dos réplicas de reportes: la prueba de caída de una réplica pasó. Amy integró fichas reutilizables, origen único, diapositivas y guion en el [PR #15](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/15); su recorrido real con dos cuentas pasó en Chrome. La [rúbrica](../RUBRICA.md) acepta incluso un monolito modular si funciona y está bien explicado. **El PDF, el ensayo del pitch y la demo reproducible siguen siendo entregables obligatorios, además del código.**
 
 El [PRD](PRD.md), sin embargo, promete una etapa final con identidad separada, Traefik y dos copias de reportes. Para cumplir lo que el equipo escribió, este plan asigna esas piezas. Si alguna pone en riesgo la demo estable, el equipo debe conservar `02-separacion` funcionando, actualizar el PRD con el alcance realmente entregado y explicar la decisión en el reporte; no declarar implementado algo que no se pueda demostrar.
 
@@ -12,7 +12,7 @@ El [PRD](PRD.md), sin embargo, promete una etapa final con identidad separada, T
 
 Cada persona crea una rama temporal desde `02-separacion` y abre PR **hacia `02-separacion`**. No modificar archivos de otra tarea sin acordar el contrato. Los cuatro trabajos empiezan en paralelo; la integración y el PDF final tienen pasos posteriores.
 
-Comandos para las tres ramas que faltan (sustituir el nombre por el de la tabla):
+Comandos para las ramas pendientes de Ceci y Luisa (sustituir el nombre por el de la tabla):
 
 ```bash
 git fetch origin
@@ -33,12 +33,12 @@ En GitHub Desktop se puede hacer la misma secuencia: Fetch/Pull de `02-separacio
 | **Oscar Iván Montiel Juárez** | `trabajo/oscar-gateway-final` | `compose.yaml`, `traefik/`, `Dockerfile`, `scripts/verify_gateway.py`, `docs/ARQUITECTURA_FINAL.md`, `docs/reporte-final.pdf` | **Entregado:** Traefik como entrada, dos copias de reportes sin estado y prueba de caída de una copia. **Pendiente posterior:** integrar los PR finales, elaborar el PDF final cuando el trabajo esté listo, retirar el puerto temporal 8001, revisar arquitectura y README, probar desde cero y fusionar `02-separacion` a `main`. |
 | **Ceci Ximena Solís Cisneros** | `trabajo/ceci-identidad-final` | `app/identity/`, `app/core/auth.py`, nuevo punto de entrada de identidad, migración/inicialización de su base y pruebas | Identidad en proceso y base lógica propios; registro/login en el mismo contrato HTTP, JWT verificable localmente por reportes y alertas, y datos previos conservados o migrados sin borrar volúmenes. |
 | **Luisa María Segura Cedeño** | `trabajo/luisa-evidencia-final` | `app/pets/`, `scripts/`, `tests/`, `docs/RESULTADOS_FINALES.md` | Añadir edición de ficha propia conforme al PRD. Hacer ensayos reproducibles de 20 suscriptores, reintento/ACK, caídas y persistencia; tabla de tiempos. Entrega a Oscar resultados y explicación de las fallas para el PDF. |
-| **Amy Valentina Veraza García** | `trabajo/amy-demo-final` | `app/web/`, `app/web/tests/`, `docs/pitch/` | Permitir registrar una mascota por separado y elegir una ya guardada al publicar. Adaptar la web a una sola entrada por Traefik cuando esté disponible, revisar móvil/accesibilidad, dejar un guion de demo y preparar el pitch con intervenciones de los cuatro. |
+| **Amy Valentina Veraza García** | `trabajo/amy-demo-final` | `app/web/`, `app/web/tests/`, `docs/pitch/` | **Entregado en PR #15:** registro y reutilización de fichas, web de origen único, pruebas de navegador, diapositivas y guion para los cuatro. **Pendiente del equipo:** ensayar el pitch y confirmar su duración con el profesor. |
 
 ### Contratos para trabajar en paralelo
 
 1. **Ceci ↔ Oscar:** mantener `POST /api/usuarios/register`, `POST /api/usuarios/login` y `GET /api/usuarios/me` iguales. Ceci añade su proceso y base lógica en Compose y cambia el destino del router `identidad` en `traefik/dynamic.yaml`; Oscar revisa esa integración. Reportes no debe consultar identidad al publicar, solo verificar JWT.
-2. **Oscar ↔ Amy:** la entrada final será `http://localhost:8000`. Las llamadas web a alertas serán rutas relativas `/api/alertas/...`. El puerto 8001 actual pasa por Traefik y existe solo para que la web anterior siga funcionando durante la transición. Tras integrar a Amy, Oscar lo elimina de Compose y del router legado.
+2. **Oscar ↔ Amy:** la web ya llama `/api/alertas/...` desde `http://localhost:8000`. El puerto 8001 actual pasa por Traefik y quedó como compatibilidad. Oscar lo elimina de Compose y del router legado y actualiza las pruebas que todavía lo usen.
 3. **Luisa ↔ todos:** los scripts de prueba usarán rutas y variables configurables para ejecutarse primero contra `02-separacion` y luego contra la arquitectura final. Las mediciones deberán registrar inicio, respuesta de publicación, creación de alerta y visualización en web; un único ensayo local de 5.55 s no es suficiente como evidencia final.
 4. **Luisa ↔ Amy:** Luisa es dueña de `app/pets/` y añade la ruta de edición propia. Amy consume las rutas existentes `GET/POST /api/mascotas` para registrar y elegir fichas; usa `pet_id` en `POST /api/reportes/extravios` cuando se elige una existente. Ambas acuerdan el contrato de edición sin tocar la carpeta de la otra.
 5. **PDF:** cada integrante entrega a Oscar texto, resultados e imágenes originales de su parte. Cuando estén listos los cambios y evidencias, Oscar reúne portada, problema, dos diagramas, al menos tres decisiones con alternativas, fallas, instrucciones de ejecución, límites y contribuciones. El archivo final va exactamente en `docs/reporte-final.pdf`.
@@ -93,9 +93,9 @@ Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Oscar sube el PDF 
 
 ## Orden de integración y fechas de control
 
-1. **Hasta el 18 de noviembre:** Oscar integra su gateway primero. Ceci, Luisa y Amy actualizan su rama temporal desde `02-separacion` antes del PR. Cada PR muestra qué cambió, cómo se ejecutó y resultados. La documentación y el pitch avanzan desde el primer día.
-2. **Hasta el 21 de noviembre:** integrar Ceci y su nueva base de identidad. Tras el merge, correr la suite, `scripts/smoke_02.py`, `scripts/verify_gateway.py` y el flujo web real. Si falla un flujo básico, reparar antes del siguiente merge.
-3. **Hasta el 24 de noviembre:** integrar Amy y Luisa con las pruebas finales. Cada cambio se incorpora a `02-separacion`; las ramas temporales se borran después de fusionar. La demo debe tener un comando de arranque y un guion estable.
+1. **Completado:** Oscar integró el gateway y Amy la web, demo y pitch. El PR #15 pasó suite, smoke, caída de réplica y recorrido real en Chrome.
+2. **Hasta el 24 de noviembre:** Ceci y Luisa actualizan sus ramas desde `02-separacion` y abren PR con comandos, resultados y sus aportaciones para el PDF.
+3. **Hasta el 25 de noviembre:** Oscar integra Ceci y Luisa, retira el puerto 8001 de compatibilidad y ejecuta suite, `scripts/smoke_02.py`, `scripts/verify_gateway.py` y el recorrido web real. Si falla un flujo básico, reparar antes de continuar.
 4. **Hasta el 26 de noviembre:** con los PR y evidencias integrados, Oscar elabora `docs/reporte-final.pdf`; el equipo revisa que los diagramas describan el código realmente entregado. Ensayar el pitch con cámara y preguntas cruzadas.
 5. **27 de noviembre:** Oscar realiza la prueba en limpio siguiendo solo el README, verifica el PDF con el equipo y las slides con Amy, comprueba las contribuciones de los cuatro y fusiona `02-separacion` a `main` si todo pasa. Subir antes de las 07:00 del **28 de noviembre**.
 
@@ -105,10 +105,12 @@ Amy sube las diapositivas y el guion de demo a `docs/pitch/`; Oscar sube el PDF 
 - [x] Arranque y prueba local iniciales; 36 pruebas Python, navegador simulado y navegador real con dos cuentas.
 - [x] Traefik, dos réplicas de reportes y prueba de continuidad con una copia caída (Oscar).
 - [ ] Identidad separada y tercera base lógica; terminar la arquitectura del PRD (Ceci, revisión de Oscar).
-- [ ] Registro independiente, reutilización y edición de mascotas según las historias del PRD.
+- [x] Registro independiente y reutilización de mascotas desde la web (Amy, PR #15).
+- [ ] Edición de ficha propia y conservación del contenido de reportes publicados (Luisa).
 - [ ] Pruebas de falla y tiempos automatizadas y repetibles con evidencia.
 - [x] README con comando de arranque y secretos generados localmente (Oscar).
 - [ ] Ejecutar el README en un entorno limpio tras todos los PR y registrar el resultado (Oscar).
 - [ ] `docs/reporte-final.pdf` con todos los apartados obligatorios (Oscar elabora; Ceci/Luisa/Amy aportan material y resultados).
-- [ ] Pitch y diapositivas (Amy coordina), demo ensayada (Amy), y cada integrante preparado para la defensa técnica (responsabilidad individual).
+- [x] Diapositivas, guion y ruta de demo preparados (Amy, PR #15).
+- [ ] Pitch ensayado por los cuatro y cada integrante preparado para la defensa técnica (responsabilidad individual).
 - [ ] Fusionar `02-separacion` a `main` y comprobar que el commit, PDF y slides estén en GitHub antes del límite (Oscar).

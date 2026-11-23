@@ -54,8 +54,8 @@ La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante
 - [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; un ensayo local, pendiente convertirlo en prueba reproducible.
 - [x] **Oscar:** Traefik, dos réplicas de reportes, feed interno aislado y prueba de publicación y alerta con una réplica detenida. La tercera base de identidad sigue pendiente de Ceci.
 - [ ] **Ceci:** separar identidad en proceso y base propios, migrar los datos existentes y enrutar `/api/usuarios` hacia ese proceso.
-- [ ] **Mascotas:** Luisa añade edición de ficha propia; Amy añade registro independiente y selección de una ficha guardada al publicar, como pide el PRD.
-- [ ] **Amy:** adaptar la web al origen único y entregar guion, demo y pitch para los cuatro.
+- [x] **Amy:** registro independiente y selección de fichas, llamadas web al mismo origen, guion y diapositivas para los cuatro ([PR #15](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/15)). Recorrido real con dos cuentas, PostgreSQL y Traefik verificado en Chrome.
+- [ ] **Luisa:** edición de ficha propia, pruebas repetibles de fallas y tiempos; entregar resultados para el reporte final.
 - [ ] **Luisa:** pruebas repetibles de fallas y tiempos; entregar resultados para el reporte final.
 - [ ] **Oscar:** integrar los PR finales, elaborar `docs/reporte-final.pdf` cuando el trabajo esté listo, probar el arranque en limpio y fusionar `02-separacion` a `main` antes de la entrega.
 
@@ -71,7 +71,7 @@ python3 scripts/smoke_02.py
 python3 scripts/verify_gateway.py
 ```
 
-Abrir `http://localhost:8000/`, `http://localhost:8000/docs` y `http://localhost:8000/health/ready`. `setup_env.py` crea `.env` con claves locales si falta y conserva las existentes, para no invalidar un volumen previo. `.env` no se sube a Git. La web actual todavía puede llamar al puerto `8001`, servido también por Traefik como compatibilidad hasta que Amy integre el origen único. `verify_gateway.py` detiene y reinicia una réplica y crea datos de prueba. Si se viene de una versión anterior de Compose, ejecutar una vez `docker compose down --remove-orphans` antes de `up`; este comando conserva el volumen. Para detener: `docker compose down`.
+Abrir `http://localhost:8000/`, `http://localhost:8000/docs` y `http://localhost:8000/health/ready`. `setup_env.py` crea `.env` con claves locales si falta y conserva las existentes, para no invalidar un volumen previo. `.env` no se sube a Git. La web usa rutas del mismo origen; el puerto `8001` de Traefik sigue publicado por compatibilidad y Oscar debe retirarlo durante el cierre. `verify_gateway.py` detiene y reinicia una réplica y crea datos de prueba. Si se viene de una versión anterior de Compose, ejecutar una vez `docker compose down --remove-orphans` antes de `up`; este comando conserva el volumen. Para detener: `docker compose down`.
 
 La suite Python se ejecuta sin instalar dependencias en el host:
 
