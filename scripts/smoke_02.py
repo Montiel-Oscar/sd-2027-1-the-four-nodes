@@ -21,7 +21,6 @@ def api(port: int, method: str, path: str, payload=None, headers=None):
 
 
 assert api(8000, "GET", "/health/ready")[0] == 200
-assert api(8001, "GET", "/health/ready")[0] == 200
 suffix = uuid4().hex[:12]
 municipality = f"Demo {suffix}"
 password = "clave-de-prueba-123"
@@ -36,7 +35,7 @@ def account(label):
 
 publisher = account("publisher")
 recipient = account("recipient")
-assert api(8001, "POST", "/api/alertas/subscriptions", {"municipality": municipality}, recipient)[0] == 201
+assert api(8000, "POST", "/api/alertas/subscriptions", {"municipality": municipality}, recipient)[0] == 201
 
 report_data = {
     "description": "Perro con collar azul",
@@ -54,7 +53,7 @@ assert api(8000, "GET", f'/api/reportes/hallazgos/{first[1]["id"]}')[0] == 200
 
 deadline = time.monotonic() + 35
 while time.monotonic() < deadline:
-    inbox = api(8001, "GET", "/api/alertas/inbox", headers=recipient)[1]
+    inbox = api(8000, "GET", "/api/alertas/inbox", headers=recipient)[1]
     matching = [alert for alert in inbox if alert["public_url"].endswith(first[1]["id"])]
     if matching:
         assert len(matching) == 1
@@ -64,5 +63,5 @@ while time.monotonic() < deadline:
 else:
     raise AssertionError("La alerta no llegó en 35 segundos")
 
-assert api(8001, "GET", "/api/alertas/inbox", headers=publisher)[1] == []
+assert api(8000, "GET", "/api/alertas/inbox", headers=publisher)[1] == []
 print("OK: identidad, hallazgo idempotente, dos bases, entrega HTTP y bandeja privada")

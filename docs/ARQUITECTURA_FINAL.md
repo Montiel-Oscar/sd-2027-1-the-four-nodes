@@ -1,56 +1,25 @@
-# Arquitectura de la entrega final
-
-## Estado integrado el 14 de noviembre de 2026
-
-La rama `02-separacion` usa Traefik como entrada a los procesos de la aplicación. Las dos réplicas `reportes_a` y `reportes_b` ejecutan el mismo código y comparten la base lógica `four_nodes`; `alertas` usa `four_nodes_alerts`. PostgreSQL sigue siendo una sola instancia: hay separación lógica de datos, no tolerancia a una caída de la base. La separación de identidad en un tercer proceso y base lógica está asignada a Ceci y aún no está integrada.
+# Arquitectura final · 26 de noviembre de 2026
 
 ```mermaid
 flowchart LR
-    U["Navegador / cliente"] -->|"localhost:8000"| G["Traefik gateway"]
-    G -->|"balanceo HTTP"| A["reportes_a :8000"]
-    G -->|"balanceo HTTP"| B["reportes_b :8000"]
+    U["Navegador"] -->|"localhost:8000"| G["Traefik"]
+    G -->|"/api/usuarios"| I["identidad :8002"]
+    G -->|"balanceo web, mascotas, reportes"| A["reportes_a :8000"]
+    G -->|"balanceo web, mascotas, reportes"| B["reportes_b :8000"]
     G -->|"/api/alertas"| N["alertas :8001"]
-    A --> D[("PostgreSQL: four_nodes")]
-    B --> D
-    N --> E[("PostgreSQL: four_nodes_alerts")]
-    N -->|"feed/ACK por gateway :8080"| G
-    G -.->|"/api/usuarios; cambio pendiente"| I["identidad futura"]
-    I -.-> F[("base identidad futura")]
+    I --> DI[("four_nodes_identity")]
+    A --> DR[("four_nodes")]
+    B --> DR
+    N --> DA[("four_nodes_alerts")]
+    N -->|"feed/ACK interno :8080"| G
 ```
 
-El nombre de cada contenedor resuelve por DNS interno de Compose. Traefik usa el proveedor de archivo y comprueba `/health/ready` cada dos segundos. Así se puede retirar una réplica que no responde y distribuir solicitudes entre las que siguen sanas. `X-Report-Instance` permite observar qué copia atendió una respuesta durante las pruebas. La aplicación no guarda sesiones en memoria: el JWT se verifica en cada petición y las escrituras usan PostgreSQL. Las dos réplicas conservan la misma `AUTH_SECRET` y `INTERNAL_API_TOKEN`.
+Las tres bases lógicas viven en **una instancia PostgreSQL**. Sólo Traefik publica el puerto 8000 al host. Compose resuelve los nombres internos por DNS. Traefik comprueba `/health/ready` cada dos segundos y puede retirar una réplica que falle. `X-Report-Instance` identifica qué copia respondió. El feed del outbox sólo se enruta por el puerto interno 8080 del gateway y exige token interno; `/api/reportes/internal/events` devuelve 404 desde el puerto público.
 
-## Rutas y aislamiento
+Identidad posee la tabla `users` en `four_nodes_identity`. Un inicializador idempotente copia cuentas antiguas de la tabla histórica de `four_nodes` sin borrar el volumen; reportes ya no monta las rutas de usuarios ni crea esa tabla en una instalación nueva. La tabla histórica se conserva para no destruir datos previos. Reportes y alertas verifican JWT localmente con la misma `AUTH_SECRET`, sin consultar identidad por cada petición privada.
 
-| Entrada | Destino | Uso |
-|---|---|---|
-| `localhost:8000/`, `/api/mascotas`, `/api/reportes` | Réplicas de reportes | Web y API pública |
-| `localhost:8000/api/usuarios` | Réplicas de reportes, hasta integrar a Ceci | Contrato de registro, login y perfil |
-| `localhost:8000/api/alertas` | Alertas | Suscripciones y bandeja |
-| `gateway:8080/api/reportes/internal` | Réplicas de reportes | Feed y ACK del outbox solo dentro de la red Compose |
-| `localhost:8001/api/alertas`, `/health`, `/docs` | Alertas mediante Traefik | Compatibilidad temporal con la web anterior; Amy elimina esta dependencia |
+Publicar un reporte confirma el reporte y el evento de outbox en una transacción de `four_nodes`. El trabajador de alertas lee el feed interno cada diez segundos, guarda una alerta única por evento y destinatario en `four_nodes_alerts`, y sólo después envía ACK. Si alertas cae, el evento queda pendiente y la publicación sigue respondiendo. Si se pierde ACK, el evento puede repetirse sin duplicar una alerta visible. Una suscripción posterior al evento no recibe avisos anteriores.
 
-Solo Traefik publica puertos del host. Los puertos de los procesos y de PostgreSQL permanecen dentro de la red Compose. Una petición pública a `/api/reportes/internal/events` devuelve 404; la ruta interna solo existe en la entrada 8080 de Traefik, que no se publica al host. El token interno sigue siendo obligatorio para consultar y confirmar eventos.
+Si cae una réplica de reportes, Traefik envía nuevas solicitudes a la sana después de detectarlo; durante esa ventana puede haber un 502 y el cliente reintenta con la misma `Idempotency-Key`. Si cae identidad, no hay registro/login, pero un JWT vigente permitió publicar en la prueba local. Si cae PostgreSQL, una publicación nueva no se confirma: es el punto de falla físico reconocido.
 
-## Publicación, alertas y fallas
-
-1. La réplica de reportes que recibe `POST /api/reportes/extravios` confirma el reporte y su evento pendiente en una transacción de `four_nodes`. `Idempotency-Key` impide duplicar la publicación si el cliente reintenta.
-2. El trabajador de `alertas` lee el feed interno por Traefik, guarda una alerta por destinatario en `four_nodes_alerts` y después envía ACK. La restricción única de alertas permite reentregar el evento sin duplicados visibles.
-3. Si `alertas` cae, la publicación sigue confirmándose y el evento queda pendiente. Al volver, el trabajador lo procesa. Si cae una réplica de reportes, Traefik la retira después de detectar el fallo; puede existir un breve 502 durante esa detección. El cliente puede reintentar la misma clave idempotente. Si cae PostgreSQL, no se confirma una publicación sin persistencia.
-
-## Ejecución y prueba
-
-```bash
-python3 scripts/setup_env.py
-docker compose up --build -d
-python3 scripts/verify_gateway.py
-```
-
-`verify_gateway.py` comprueba el balanceo, oculta el feed interno, detiene `reportes_a`, ejecuta el flujo real de registro, publicación y alerta mientras `reportes_b` sirve las solicitudes, y vuelve a iniciar `reportes_a`. El script crea datos de prueba locales. Para detener sin borrar el volumen: `docker compose down`.
-
-## Trabajo pendiente para que el diagrama sea definitivo
-
-- **Ceci:** proceso y tercera base lógica de identidad; cambiar la ruta `identidad` de `traefik/dynamic.yaml` a su servicio y retirar las tablas/rutas de identidad de reportes.
-- **Oscar:** Amy ya cambió las llamadas web a `/api/alertas` en el mismo origen; quitar el puerto de compatibilidad `8001` del gateway y actualizar las pruebas que lo usen.
-- **Luisa:** medir repetidamente la recuperación y los tiempos de alerta; entregar resultados y explicación de fallas a Oscar.
-- **Oscar:** revisar el diagrama después de integrar los PR, elaborar el PDF final con las aportaciones del equipo y hacer la prueba final en limpio antes de fusionar `02-separacion` a `main`.
+Pruebas reproducibles: `python3 scripts/smoke_02.py`, `python3 scripts/verify_gateway.py` y `python3 scripts/resilience_20_subscribers.py --subscribers 20 --trials 3 --timeout 150 --with-faults`. Los [resultados](RESULTADOS_FINALES.md) y el [reporte final](reporte-final.pdf) distinguen observaciones locales de garantías de servicio.

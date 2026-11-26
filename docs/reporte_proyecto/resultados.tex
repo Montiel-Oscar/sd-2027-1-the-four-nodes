@@ -1,0 +1,14 @@
+\subsection*{Ensayos de 20 suscriptores}
+El 26 de noviembre de 2026 se ejecutaron tres ensayos locales. Cada uno creó 20 suscriptores previos a un hallazgo y un extravío, usando un municipio nuevo. Los tiempos siguientes se midieron desde la respuesta HTTP de publicación hasta consultar la alerta por API para el primer y el último destinatario; no representan el instante en que una persona la ve en pantalla.
+\begin{table}[H]\centering\small
+\caption{Tiempos locales en segundos, medidos por \texttt{scripts/resilience\_20\_subscribers.py}.}
+\begin{tabular}{@{}crrrr@{}}\toprule
+Ensayo & Hallazgo POST & Hallazgo 20/20 & Extravío POST & Extravío 20/20 \\\midrule
+1 & 0.006 & 9.147 & 0.025 & 9.806 \\
+2 & 0.006 & 7.442 & 0.020 & 9.744 \\
+3 & 0.006 & 7.439 & 0.007 & 10.307 \\\bottomrule
+\end{tabular}
+\end{table}
+En los seis reportes, los 20 suscriptores recibieron una sola alerta cada uno. El máximo observado hasta consultar todas las alertas fue \textbf{10.307 s}, menor que el objetivo de tres minutos en este entorno local. El trabajador revisa eventos cada diez segundos; la página abierta consulta la bandeja a intervalos, por lo que su actualización puede ocurrir después de la medición por API.
+
+Al detener \texttt{alertas}, un hallazgo todavía respondió HTTP 201. Después de reiniciar el servicio, la alerta única se observó en 2.518 s desde la nueva espera. Al detener PostgreSQL, la publicación respondió HTTP 500 y no confirmó un reporte. Se reinició la base sin borrar volúmenes. La prueba de caída de una réplica de reportes también completó publicación y alerta usando la otra copia. Ninguna de estas pruebas garantiza disponibilidad ante caída de PostgreSQL ni el mismo tiempo en redes externas.

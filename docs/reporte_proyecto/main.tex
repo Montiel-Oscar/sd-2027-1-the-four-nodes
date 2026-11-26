@@ -1,0 +1,113 @@
+% !TEX program = pdflatex
+\documentclass[11pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,mexico]{babel}
+\usepackage{lmodern,graphicx,geometry,fancyhdr,array,booktabs,tabularx,ragged2e,enumitem,setspace,xcolor,tikz,hyperref,float}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\graphicspath{{portada_img/}}
+\input{portada.tex}
+\geometry{left=2.5cm,right=2.5cm,top=3.4cm,bottom=2.6cm,headheight=1.7cm,headsep=0.6cm}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\includegraphics[height=1.15cm]{\logoFI}}
+\fancyhead[R]{\includegraphics[height=1.15cm]{\logoUNAM}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{UNAMRojo}\leaders\hrule height\headrulewidth\hfill}}
+\hypersetup{colorlinks=true,linkcolor=MoradoBibliografia,urlcolor=UNAMRojo}
+\setlength{\parindent}{0pt}\setlength{\parskip}{0.45em}\onehalfspacing
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\begin{document}
+\hacerportada
+\begin{center}
+{\Large\bfseries The Four Nodes: búsqueda comunitaria de mascotas\par}
+\vspace{0.2em}{\small Proyecto final de Sistemas Distribuidos, FI-UNAM\par}
+\end{center}
+\begin{abstract}
+Cuando se extravía una mascota, su dueño suele colocar carteles y preguntar en la zona. La información llega a pocas personas y los posibles hallazgos quedan dispersos. Desarrollamos una aplicación web para registrar mascotas, publicar extravíos y hallazgos con ubicación textual pública, y avisar a quienes siguen un municipio. El prototipo separa identidad, reportes y alertas en procesos; Traefik distribuye las solicitudes de reportes entre dos réplicas. El reporte y su evento se guardan juntos; la alerta se crea después mediante un trabajador que consulta eventos pendientes y confirma su procesamiento. La base de datos es una instancia PostgreSQL con tres bases lógicas, por lo que su caída afecta al sistema completo. Este documento describe el alcance realmente implementado, las decisiones y las pruebas locales, con sus límites.
+\end{abstract}
+\textbf{Palabras clave:} sistemas distribuidos; mascotas extraviadas; gateway; outbox; consistencia eventual.
+
+\section{Problema, usuarios y alcance}
+La persona que perdió una mascota necesita llegar a más vecinos con rapidez. Los carteles cercanos y las preguntas directas tienen alcance limitado; un localizador o chip no está disponible para todos. Nuestro producto ofrece un reporte público con enlace compartible. Una persona que encontró una mascota puede registrar el hallazgo sin tener una ficha previa. Otra persona sigue un municipio y consulta una bandeja de alertas para reportes publicados después de su suscripción.
+
+La primera versión entrega registro e inicio de sesión, fichas propias, edición de ficha, extravíos, hallazgos, filtros por municipio, enlaces públicos y bandeja. La ubicación se expresa con municipio, colonia y referencia pública. No hay mapa, GPS, fotografías cargadas por el usuario, correo, mensajes telefónicos ni cotejo automático entre reportes. El teléfono sólo aparece en el enlace público si quien publica lo autoriza. El objetivo de alerta es menos de tres minutos; las mediciones de este equipo se presentan en la sección de resultados.
+
+\section{Diagrama funcional}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.8cm and 1.0cm,>=Stealth, box/.style={draw=UNAMRojo,rounded corners,align=center,text width=2.5cm,minimum height=1.2cm,font=\small}]
+\node[box] (a) {Dueño o testigo\ inicia sesión};
+\node[box,right=of a] (b) {Publica extravío\ o hallazgo};
+\node[box,right=of b] (c) {Enlace público\ compartible};
+\node[box,below=of a] (d) {Vecino sigue\ municipio};
+\node[box,right=of d] (e) {Trabajador crea\ alerta posterior};
+\node[box,right=of e] (f) {Bandeja\ del vecino};
+\draw[->] (a)--(b);\draw[->] (b)--(c);\draw[->] (b)--(e);\draw[->] (d)--(e);\draw[->] (e)--(f);
+\end{tikzpicture}
+\caption{Recorridos principales. Las alertas se generan para suscripciones previas al evento.}
+\end{figure}
+Una ficha puede guardarse sin publicar. Al crear un extravío se elige una ficha propia existente o se crea una nueva junto con el reporte. La descripción del reporte se conserva como instantánea: editar la ficha después no cambia retroactivamente una publicación. Los enlaces públicos se abren sin sesión; crear fichas, publicar, seguir un municipio y leer la bandeja requieren token.
+
+\section{Arquitectura y propiedad de datos}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.65cm and 0.8cm,>=Stealth, svc/.style={draw=UNAMRojo,rounded corners,align=center,text width=2.3cm,minimum height=0.95cm,font=\small}, db/.style={draw,ellipse,align=center,text width=2.0cm,minimum height=0.8cm,font=\small}]
+\node[svc] (web) {Navegador};\node[svc,right=of web] (gw) {Traefik\\ puerto 8000};
+\node[svc,right=of gw,yshift=1.3cm] (id) {Identidad};
+\node[svc,right=of gw] (rep) {Reportes A/B\\ + mascotas};
+\node[svc,right=of gw,yshift=-1.3cm] (al) {Alertas\\ trabajador};
+\node[db,right=of id] (di) {BD identidad};\node[db,right=of rep] (dr) {BD reportes};\node[db,right=of al] (da) {BD alertas};
+\draw[->] (web)--(gw);\draw[->] (gw)--(id);\draw[->] (gw)--(rep);\draw[->] (gw)--(al);
+\draw[->] (id)--(di);\draw[->] (rep)--(dr);\draw[->] (al)--(da);
+\draw[->,dashed] (al.west) to[bend left=16] node[below,font=\scriptsize]{feed/ACK interno} (gw.south);
+\end{tikzpicture}
+\caption{Tres servicios, tres bases lógicas y un solo PostgreSQL físico. Traefik balancea entre dos copias de reportes.}
+\end{figure}
+Traefik es la única entrada publicada al host. Enruta \texttt{/api/usuarios} a identidad, \texttt{/api/alertas} a alertas, y la web, mascotas y reportes a dos instancias equivalentes de reportes. El feed del outbox sólo se atiende por una entrada interna de Traefik, no publicada al host; exige además un token de servicio. Compose resuelve los contenedores por DNS. Las réplicas no guardan sesiones en memoria y comparten una base lógica y la clave de firma. El token JWT se verifica localmente en reportes y alertas, por lo que publicar con un token vigente no requiere consultar identidad.
+
+PostgreSQL contiene \texttt{four\_nodes} para mascotas, reportes y eventos; \texttt{four\_nodes\_identity} para cuentas y hashes de contraseñas; y \texttt{four\_nodes\_alerts} para suscripciones y alertas. El inicializador copia usuarios históricos a identidad de modo idempotente sin borrar el volumen. La tabla histórica de usuarios permanece en \texttt{four\_nodes} para conservar datos previos, pero el proceso de reportes ya no la crea ni consulta.
+
+\section{Decisiones de diseño y alternativas}
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Guardar reporte y evento en una transacción local.} Se descartó enviar la alerta dentro de la solicitud HTTP de publicación: habría unido su latencia y disponibilidad a la respuesta del reporte. El outbox permite responder después de confirmar el reporte, aunque alertas esté caído. El trabajador confirma el evento sólo después de guardar las alertas.
+\item \textbf{JWT verificado localmente.} Se descartó preguntar a identidad en cada petición privada. Una caída de identidad impide registro y login, pero un token vigente puede seguir autorizando publicaciones. El costo es que un token emitido conserva validez hasta su vencimiento (60 minutos), aun si se quisiera revocar antes.
+\item \textbf{Traefik y dos réplicas de reportes.} Se descartó una sola instancia de reportes como entrada final: su caída impediría todas las publicaciones. La comprobación de salud retira una réplica fallida; existe una ventana breve en la que el cliente podría recibir 502. La clave de idempotencia permite reintentar sin crear otro reporte.
+\item \textbf{Una instancia PostgreSQL con tres bases lógicas.} Se descartó mantener usuarios, reportes y alertas en un mismo esquema, pues ocultaría la propiedad de datos. También se descartó desplegar un clúster de bases sin tiempo para operarlo y medirlo. La instancia única es un punto de falla declarado.
+\end{enumerate}
+
+\section{Manejo de fallas y consistencia eventual}
+La publicación responde \texttt{201} cuando el reporte y su evento quedan confirmados en la base de reportes. La alerta puede aparecer después, porque el trabajador revisa el feed aproximadamente cada diez segundos. Si alertas está detenido, el evento queda pendiente y se procesa al reiniciar el servicio. Si el trabajador guarda una alerta pero se pierde el ACK, reentrega el evento; una restricción única por par evento y destinatario evita otra alerta visible. Una suscripción creada después del evento no recibe notificaciones retrospectivas.
+
+Si una copia de reportes cae, Traefik la detecta y dirige solicitudes a la otra. Durante la detección puede haber un error transitorio y el cliente debe reintentar con la misma \texttt{Idempotency-Key}. Si cae identidad, registro y login dejan de funcionar, pero un JWT vigente puede seguir sirviendo para publicar. Si cae PostgreSQL, no se puede confirmar una nueva publicación; el sistema no ofrece disponibilidad total ante esa falla.
+
+\section{Pruebas y resultados}
+El equipo probó la aplicación con Docker Compose y PostgreSQL. La suite Python contiene 38 pruebas aprobadas tras integrar la edición de mascotas y reparar una mezcla accidental con una versión anterior de autenticación y alertas. Un recorrido HTTP confirmó registro, publicación idempotente, entrega de alerta y bandeja privada. Otra prueba detuvo \texttt{reportes\_a}; el mismo recorrido siguió funcionando con \texttt{reportes\_b}. La interfaz se verificó en Chrome con dos cuentas, fichas separadas y reutilizadas, ambos tipos de reporte, suscripción, bandeja y vista de 390 px.
+
+\input{resultados.tex}
+
+Cada ensayo usa un municipio nuevo para evitar alertas de publicaciones anteriores. Los datos de prueba permanecen en el volumen hasta que se elimine de manera explícita.
+
+\section{Cómo levantar y probar el prototipo}
+Desde la raíz del repositorio, con Docker, Docker Compose y Python 3 instalados:
+\begin{verbatim}
+python3 scripts/setup_env.py
+docker compose up --build -d
+python3 scripts/smoke_02.py
+python3 scripts/verify_gateway.py
+python3 scripts/resilience_20_subscribers.py \
+  --subscribers 20 --trials 3 --timeout 150
+\end{verbatim}
+Abrir \url{http://localhost:8000/} para la interfaz y \url{http://localhost:8000/docs} para la documentación de reportes. Registro, login y alertas funcionan desde el mismo origen. La suite se ejecuta con el comando indicado en el README; \texttt{docker compose down} detiene los servicios sin borrar el volumen. Para reproducir la demo de navegador, seguir \texttt{docs/pitch/GUION\_FINAL.md} y usar dos perfiles independientes.
+
+\section{Límites y qué haríamos distinto}
+El prototipo no tiene despliegue público, HTTPS, cola de mensajes externa, réplica de PostgreSQL ni notificaciones push. El aviso se consulta en una bandeja web. Un municipio escrito de forma diferente puede no coincidir exactamente con la suscripción. En una siguiente versión priorizaríamos normalizar ubicaciones y evaluar la usabilidad con personas reales; después mediríamos si hace falta un broker o replicación de datos. Esas mejoras no forman parte de la entrega demostrada.
+
+\section{Contribuciones del equipo}
+\small\begin{tabularx}{\textwidth}{@{}p{3.2cm}Y@{}}\toprule
+Integrante & Contribución verificable \\\midrule
+Oscar Iván Montiel Juárez & Reportes, hallazgos, outbox, gateway Traefik, dos réplicas, integración final, documentación y este PDF. \\
+Luisa María Segura Cedeño & Mascotas, edición de ficha propia, servicio de alertas, guion de pruebas de resiliencia y resultados medidos. \\
+Cecilia Ximena Solís Cisneros & Registro, login, JWT y autorización integrados en la primera etapa; la separación final de identidad fue integrada por Oscar durante el cierre. \\
+Amy Valentina Veraza García & Interfaz web, fichas reutilizables, flujo de dos cuentas, diapositivas, capturas y guion de pitch. \\\bottomrule
+\end{tabularx}\par\medskip
+El historial de commits y solicitudes de cambio del repositorio permite consultar las aportaciones individuales. La arquitectura final y las correcciones de integración se atribuyen a sus autores reales, sin presentar código de integración como trabajo no realizado por otra persona.
+\end{document}

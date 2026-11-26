@@ -22,6 +22,42 @@ services:
         condition: service_healthy
     command: ["python", "-c", "from app.core.db import init_db; init_db()"]
 
+  init_identity_database:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        psql -h db -U four_nodes -d four_nodes -tAc
+        "SELECT 1 FROM pg_database WHERE datname='four_nodes_identity'"
+        | grep -q 1 || createdb -h db -U four_nodes four_nodes_identity
+
+  init_identity_db:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes_identity
+      LEGACY_REPORT_DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes
+    depends_on:
+      init_identity_database:
+        condition: service_completed_successfully
+      init_report_db:
+        condition: service_completed_successfully
+    command: ["python", "-m", "app.identity.migrate"]
+
+  identidad:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://four_nodes:${POSTGRES_PASSWORD}@db:5432/four_nodes_identity
+      AUTH_SECRET: ${AUTH_SECRET:?Genera AUTH_SECRET en .env antes de iniciar}
+    depends_on:
+      init_identity_db:
+        condition: service_completed_successfully
+    command: ["uvicorn", "app.identity.main:app", "--host", "0.0.0.0", "--port", "8002"]
+
   reportes_a:
     build: .
     environment: &report_environment
@@ -79,14 +115,14 @@ services:
       - ./traefik/dynamic.yaml:/etc/traefik/dynamic.yaml:ro
     ports:
       - "8000:80"
-      # Transición: la web de Amy aún usa localhost:8001 para alertas.
-      - "8001:8001"
     depends_on:
       reportes_a:
         condition: service_started
       reportes_b:
         condition: service_started
       alertas:
+        condition: service_started
+      identidad:
         condition: service_started
 
 volumes:
