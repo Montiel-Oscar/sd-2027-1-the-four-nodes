@@ -7,25 +7,14 @@ http:
       service: reportes
       priority: 100
     alertas:
-      entryPoints: [web, legacyAlerts]
+      entryPoints: [web]
       rule: "PathPrefix(`/api/alertas`)"
       service: alertas
       priority: 50
-    alertas-health-legacy:
-      entryPoints: [legacyAlerts]
-      rule: "PathPrefix(`/health`)"
-      service: alertas
-      priority: 20
-    alertas-docs-legacy:
-      entryPoints: [legacyAlerts]
-      rule: "Path(`/docs`) || Path(`/openapi.json`)"
-      service: alertas
-      priority: 20
-    # Ceci cambiará este servicio al proceso identidad sin modificar la URL pública.
     identidad:
       entryPoints: [web]
       rule: "PathPrefix(`/api/usuarios`)"
-      service: reportes
+      service: identidad
       priority: 40
     reportes-publicos:
       entryPoints: [web]
@@ -51,3 +40,11 @@ http:
           timeout: 1s
         servers:
           - url: http://alertas:8001
+    identidad:
+      loadBalancer:
+        healthCheck:
+          path: /health/ready
+          interval: 2s
+          timeout: 1s
+        servers:
+          - url: http://identidad:8002

@@ -26,9 +26,16 @@ def get_session() -> Iterator[Session]:
 
 
 def init_db() -> None:
-    # Importar los modelos para registrar sus tablas en la metadata común.
-    from app.identity import models as identity_models  # noqa: F401
-    from app.pets import models as pets_models  # noqa: F401
-    from app.reports import models as reports_models  # noqa: F401
+    # Reportes conserva solo mascotas y reportes; identidad posee otra base.
+    from app.pets.models import Pet
+    from app.reports.models import (
+        FoundPetReport, MissingPetReport, OutboxEventV1, PendingReportEvent,
+    )
 
-    Base.metadata.create_all(bind=get_engine())
+    Base.metadata.create_all(
+        bind=get_engine(),
+        tables=[
+            Pet.__table__, MissingPetReport.__table__, PendingReportEvent.__table__,
+            FoundPetReport.__table__, OutboxEventV1.__table__,
+        ],
+    )

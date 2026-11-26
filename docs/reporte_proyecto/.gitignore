@@ -1,0 +1,14 @@
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.bbl
+*.bbl-*
+*.blg
+*.synctex.gz
+main.pdf
+referencias.bib
+code/
+img/
+tmp/

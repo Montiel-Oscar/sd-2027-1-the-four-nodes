@@ -1,0 +1,38 @@
+% Datos editables de la portada del proyecto de Sistemas Distribuidos.
+\newcommand{\nombreUniversidad}{Universidad Nacional Autónoma de México}
+\newcommand{\nombreFacultad}{Facultad de Ingeniería}
+\newcommand{\materia}{Sistemas Distribuidos}
+\newcommand{\tituloActividad}{Proyecto final}
+\newcommand{\subtituloActividad}{The Four Nodes: búsqueda comunitaria de mascotas}
+\newcommand{\equipo}{The Four Nodes}
+\newcommand{\fechaEntrega}{28 de noviembre de 2026}
+\newcommand{\logoFI}{portada_img/escudofi_rojo.jpg}
+\newcommand{\logoUNAM}{portada_img/escudounam_negro.jpg}
+\definecolor{UNAMRojo}{RGB}{139,0,0}
+\definecolor{MoradoBibliografia}{HTML}{592598}
+
+\newcommand{\hacerportada}{
+\thispagestyle{empty}
+\begin{center}
+    \begin{tabular}{m{0.15\textwidth} m{0.60\textwidth} m{0.15\textwidth}}
+        \includegraphics[width=2cm]{\logoFI} &
+        \centering\Huge\textbf{\nombreUniversidad} &
+        \raggedleft\includegraphics[width=2cm]{\logoUNAM}
+    \end{tabular}
+\end{center}
+\vspace{0.3cm}
+\begin{center}
+    {\LARGE \textbf{\nombreFacultad}}\\[0.8cm]
+    {\LARGE \textbf{\materia}}\\[0.8cm]
+    {\LARGE \textbf{\tituloActividad}}\\[0.4cm]
+    {\LARGE \subtituloActividad}\\[0.8cm]
+    {\Large \textbf{Equipo: \equipo}}\\[0.6cm]
+    {\large Oscar Iván Montiel Juárez\\
+    Luisa María Segura Cedeño\\
+    Cecilia Ximena Solís Cisneros\\
+    Amy Valentina Veraza García}\\[0.7cm]
+    {\large \fechaEntrega}\\[0.5cm]
+    {\small\url{https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes}}
+\end{center}
+\newpage
+}
