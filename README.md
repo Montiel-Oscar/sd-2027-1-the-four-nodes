@@ -11,7 +11,7 @@ Proyecto final de Sistemas Distribuidos 2027-1 de la FI-UNAM. Una persona public
 
 ## Primera entrega: `01-monolito`
 
-La rama `main` conserva la versión estable y la documentación. La rama `01-monolito` guarda la primera entrega: una aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. Su flujo principal permite **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito usa una cuenta de demostración; la separación en servicios avanza en `02-separacion`.
+La rama `01-monolito` guarda la primera entrega: una aplicación FastAPI y una base PostgreSQL levantadas con Docker Compose. Su flujo principal permite **publicar un extravío**, capturando o seleccionando la mascota y obteniendo un enlace público. El monolito usa una cuenta de demostración. La entrega final distribuida está en `main` y `02-separacion`.
 
 **Entrega del curso:** sábado 17 de octubre de 2026, antes de las 07:00. El equipo comparte la liga del repositorio en su comentario de la Discussion #44 cuando la rama `01-monolito` tenga el flujo principal funcionando.
 
@@ -36,47 +36,43 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-Las tres ramas permanentes son `main` (referencia del proyecto), `01-monolito` (primera entrega terminada) y `02-separacion` (segunda entrega en integración). Las ramas personales son temporales: parten de su rama de etapa y se borran después de integrar el PR. Las etapas posteriores del PRD todavía no tienen rama.
+Las tres ramas permanentes son `main` (entrega final), `01-monolito` (primera entrega terminada) y `02-separacion` (desarrollo distribuido terminado). Las ramas personales son temporales: parten de su rama de etapa y se borran después de integrar el PR.
 
-## Versión distribuida: `02-separacion`
+## Versión final distribuida: `main` y `02-separacion`
 
-La rama `02-separacion` tiene Traefik, dos réplicas de reportes, un proceso de alertas y dos bases lógicas en PostgreSQL. El [diagrama y comportamiento ante fallas](docs/ARQUITECTURA_FINAL.md), los [contratos](docs/CONTRATOS_02_SEPARACION.md) y el [estado detallado](docs/ESTADO_02_SEPARACION.md) explican la implementación y lo pendiente.
+La aplicación final tiene tres servicios FastAPI: identidad, reportes (dos réplicas) y alertas. Traefik publica únicamente `http://localhost:8000`; PostgreSQL guarda tres bases lógicas en una instancia. El [diagrama de arquitectura](docs/ARQUITECTURA_FINAL.md), el [PRD](docs/PRD.md), los [resultados medidos](docs/RESULTADOS_FINALES.md) y la [rúbrica](RUBRICA.md) documentan la entrega.
 
-La [rúbrica del proyecto final](RUBRICA.md) y el [plan de cierre por integrante](docs/PLAN_CIERRE_RUBRICA.md) guían la entrega del **28 de noviembre de 2026 antes de las 07:00** (hora de Ciudad de México).
+### Arranque sin pasos ocultos
 
-### Lista de avance
-
-- [x] **Oscar:** hallazgos, listas públicas, publicación idempotente y feed/ACK del outbox ([PR #4](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/4)).
-- [x] **Ceci:** registro, login, JWT y autorización compartida ([PR #7](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/7)).
-- [x] **Luisa + integración:** API y trabajador de alertas, bandeja privada, segunda base lógica y Compose ([PR #5](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/5)); el PR entró por error a `main` y su commit se incorporó también a `02-separacion`.
-- [x] **Amy:** interfaz de registro/login, hallazgos, suscripciones, bandeja, Bearer JWT y páginas públicas ([PR #8](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/8)).
-- [x] **Integración:** 36 pruebas Python, prueba de navegador con APIs simuladas, flujo web real con dos cuentas y entrega de ambas alertas; publicación durante la caída de `alertas` y entrega única tras reiniciarlo.
-- [x] **Medición local:** 20/20 suscriptores recibieron la alerta en 5.55 s desde la respuesta de publicación; un ensayo local, pendiente convertirlo en prueba reproducible.
-- [x] **Oscar:** Traefik, dos réplicas de reportes, feed interno aislado y prueba de publicación y alerta con una réplica detenida. La tercera base de identidad sigue pendiente de Ceci.
-- [ ] **Ceci:** separar identidad en proceso y base propios, migrar los datos existentes y enrutar `/api/usuarios` hacia ese proceso.
-- [x] **Amy:** registro independiente y selección de fichas, llamadas web al mismo origen, guion y diapositivas para los cuatro ([PR #15](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/15)). Recorrido real con dos cuentas, PostgreSQL y Traefik verificado en Chrome.
-- [x] **Luisa:** edición de ficha propia y pruebas automatizadas ([PR #17](https://github.com/Montiel-Oscar/sd-2027-1-the-four-nodes/pull/17)).
-- [ ] **Luisa:** pruebas repetibles de fallas y tiempos; entregar resultados para el reporte final.
-- [ ] **Oscar:** integrar los PR finales, elaborar `docs/reporte-final.pdf` cuando el trabajo esté listo, probar el arranque en limpio y fusionar `02-separacion` a `main` antes de la entrega.
-
-### Arranque y pruebas de `02-separacion`
-
-Con Docker, Docker Compose y Python 3 instalados, desde la raíz del repositorio:
+Requisitos: Docker con Compose y Python 3. Desde la raíz del repositorio:
 
 ```bash
-git switch 02-separacion
 python3 scripts/setup_env.py
 docker compose up --build -d
 python3 scripts/smoke_02.py
 python3 scripts/verify_gateway.py
 ```
 
-Abrir `http://localhost:8000/`, `http://localhost:8000/docs` y `http://localhost:8000/health/ready`. `setup_env.py` crea `.env` con claves locales si falta y conserva las existentes, para no invalidar un volumen previo. `.env` no se sube a Git. La web usa rutas del mismo origen; el puerto `8001` de Traefik sigue publicado por compatibilidad y Oscar debe retirarlo durante el cierre. `verify_gateway.py` detiene y reinicia una réplica y crea datos de prueba. Si se viene de una versión anterior de Compose, ejecutar una vez `docker compose down --remove-orphans` antes de `up`; este comando conserva el volumen. Para detener: `docker compose down`.
+Abrir [la aplicación](http://localhost:8000/), [la comunidad](http://localhost:8000/comunidad) o [la API de reportes](http://localhost:8000/docs). `setup_env.py` crea las claves locales en `.env` si faltan; conserva las existentes para mantener cuentas y volumen. `.env` está ignorado por Git. Si se usó una versión anterior, `docker compose down --remove-orphans` antes de iniciar conserva el volumen. Para detener: `docker compose down`. Sólo Traefik publica un puerto al host.
 
-La suite Python se ejecuta sin instalar dependencias en el host:
+### Pruebas
 
 ```bash
 docker compose run --rm --volume "$PWD:/workspace" reportes_a sh -c "pip install -q '.[dev]' && pytest -q"
+python3 scripts/resilience_20_subscribers.py --subscribers 20 --trials 3 --timeout 150 --with-faults
 ```
 
-Las instrucciones individuales y todos los pendientes de la última entrega están en [docs/PLAN_CIERRE_RUBRICA.md](docs/PLAN_CIERRE_RUBRICA.md). Cada compañera crea su rama temporal desde `02-separacion` y abre un PR hacia `02-separacion`.
+La suite Python pasó **38 pruebas**. El recorrido HTTP, el balanceo con una réplica detenida y la demo real de dos cuentas en Chrome pasaron. En tres ensayos locales de 20 suscriptores, los 20 recibieron una sola alerta por reporte; el máximo observado hasta consultar todas las bandejas fue **10.307 s**. La prueba de caída de `alertas` mantuvo la publicación y entregó la alerta tras reiniciar. Con PostgreSQL detenido, una nueva publicación no se confirmó y el reporte fallido no apareció tras la recuperación. Estos resultados son locales y no garantizan disponibilidad ante caída de la instancia de PostgreSQL.
+
+### Entrega y presentación
+
+- [Reporte final PDF](docs/reporte-final.pdf), elaborado desde [fuentes LaTeX](docs/reporte_proyecto/main.tex) basadas en el estilo del reporte de referencia.
+- [Diapositivas PDF](docs/pitch/diapositivas.pdf) y [HTML navegable](docs/pitch/diapositivas.html).
+- [Guion de voces y clics de la demo](docs/pitch/GUION_FINAL.md).
+- [Resultados y fallas](docs/RESULTADOS_FINALES.md).
+
+**Equipo:** Oscar Iván Montiel Juárez, Luisa María Segura Cedeño, Cecilia Ximena Solís Cisneros y Amy Valentina Veraza García. La entrega del curso es el **28 de noviembre de 2026 antes de las 07:00**, hora de Ciudad de México.
+
+### Límites
+
+No hay despliegue público, HTTPS, mapa, notificaciones al teléfono ni alta disponibilidad de PostgreSQL. Los tres servicios usan tres bases lógicas dentro de una sola instancia física. La bandeja web se actualiza por consulta periódica y las alertas son eventualmente consistentes.

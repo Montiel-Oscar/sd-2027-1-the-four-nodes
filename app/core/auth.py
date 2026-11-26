@@ -12,11 +12,49 @@ TOKEN_ISSUER = "the-four-nodes"
 TOKEN_LIFETIME = timedelta(minutes=60)
 bearer = HTTPBearer(auto_error=False)
 
-def get_actor_id() -> UUID:
-    """Entrega el mismo actor a identidad, mascotas y reportes.
 
-    En esta etapa no autentica credenciales: todos los visitantes comparten
-    la cuenta demo. Los consumidores deben usar Depends(get_actor_id), sin
-    copiar el UUID, para poder sustituir esta dependencia por autenticación.
-    """
-    return DEMO_USER_ID
+def get_auth_secret() -> str:
+    secret = os.getenv("AUTH_SECRET", "")
+    if len(secret.encode("utf-8")) < 32:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AUTH_SECRET debe contener al menos 32 bytes",
+        )
+    return secret
+
+
+def invalid_credentials() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciales inválidas o vencidas",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def create_access_token(actor_id: UUID) -> str:
+    now = datetime.now(timezone.utc)
+    return jwt.encode(
+        {"sub": str(actor_id), "iss": TOKEN_ISSUER, "exp": now + TOKEN_LIFETIME},
+        get_auth_secret(),
+        algorithm="HS256",
+    )
+
+
+def get_actor_id(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+) -> UUID:
+    """Verifica Bearer localmente; no importa modelos ni consulta cuentas."""
+    if credentials is None:
+        raise invalid_credentials()
+    secret = get_auth_secret()
+    try:
+        claims = jwt.decode(
+            credentials.credentials,
+            secret,
+            algorithms=["HS256"],
+            issuer=TOKEN_ISSUER,
+            options={"require": ["sub", "iss", "exp"]},
+        )
+        return UUID(claims["sub"])
+    except (jwt.InvalidTokenError, ValueError, TypeError, AttributeError):
+        raise invalid_credentials() from None

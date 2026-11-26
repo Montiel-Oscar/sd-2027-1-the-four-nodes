@@ -8,7 +8,6 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.db import get_engine, init_db
-from app.identity.router import router as identity_router
 from app.pets.router import router as pets_router
 from app.reports.router import router as reports_router
 from app.web.router import router as web_router
@@ -30,7 +29,6 @@ async def identify_replica(request, call_next):
     return response
 
 app.include_router(web_router)
-app.include_router(identity_router)
 app.include_router(pets_router)
 app.include_router(reports_router)
 

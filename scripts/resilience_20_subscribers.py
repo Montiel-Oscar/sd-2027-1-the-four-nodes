@@ -138,11 +138,12 @@ def run_latency_trial(trial_num: int, subscribers_count: int, timeout_sec: float
     # 2) Reporte de extravío
     t_start_extravio = time.monotonic()
     extravio_payload = {
-        "pet_name": f"Firulais-{run_id[:4]}",
-        "species": "perro",
-        "traits": "Mancha café en ojo izquierdo",
-        "description": f"Extravío prueba {trial_num} cerca del parque",
-        "lost_at": datetime.now(timezone.utc).isoformat(),
+        "pet": {
+            "name": f"Firulais-{run_id[:4]}",
+            "species": "perro",
+            "traits": "Mancha café en ojo izquierdo",
+        },
+        "seen_at": datetime.now(timezone.utc).isoformat(),
         "municipality": municipality,
         "neighborhood": "Norte",
         "landmark": "Kiosco",
@@ -218,13 +219,14 @@ def run_db_outage_check() -> None:
     """Verifica que detener PostgreSQL impide confirmar una publicación no guardada."""
     run_id = uuid4().hex[:10]
     pub_headers = register_and_login(f"dbpub-{run_id}@example.org", PASSWORD)
-    print("[Falla 2] Deteniendo 'postgres' con docker compose stop postgres...")
-    subprocess.run(["docker", "compose", "stop", "postgres"], check=True)
+    municipality = f"BD-{run_id}"
+    print("[Falla 2] Deteniendo 'db' con docker compose stop db...")
+    subprocess.run(["docker", "compose", "stop", "db"], check=True)
     try:
         payload = {
             "description": "Intento con BD detenida",
             "seen_at": datetime.now(timezone.utc).isoformat(),
-            "municipality": f"BD-{run_id}",
+            "municipality": municipality,
             "neighborhood": "Centro",
             "landmark": "Plaza",
             "show_phone": False,
@@ -238,13 +240,27 @@ def run_db_outage_check() -> None:
                 {**pub_headers, "Idempotency-Key": f"db-{run_id}"},
                 timeout=4.0,
             )
-            assert status >= 500 or status == 503, f"Se esperaba error de servidor, salió {status}"
+            assert status >= 500, f"Se esperaba error de servidor, salió {status}"
             print(f"  -> Fallo controlado recibido: HTTP {status}")
-        except (HTTPError, URLError, OSError, AssertionError) as exc:
+        except (URLError, OSError) as exc:
             print(f"  -> Fallo esperado al caer PostgreSQL: {type(exc).__name__}: {exc}")
     finally:
-        print("[Falla 2] Levantando 'postgres' sin borrar volúmenes...")
-        subprocess.run(["docker", "compose", "start", "postgres"], check=True)
+        print("[Falla 2] Levantando 'db' sin borrar volúmenes...")
+        subprocess.run(["docker", "compose", "start", "db"], check=True)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        try:
+            status, reports = http_req(
+                BASE_URL, "GET", f"/api/reportes/hallazgos?municipality={municipality}"
+            )
+            if status == 200 and isinstance(reports, list):
+                assert reports == [], "El intento fallido apareció como reporte publicado"
+                print("  -> La publicación fallida no figura después de recuperar PostgreSQL")
+                return
+        except (URLError, OSError):
+            pass
+        time.sleep(1)
+    raise AssertionError("No se pudo comprobar la base después de reiniciarla")
 
 
 def main() -> None:

@@ -1,70 +1,40 @@
-# Resultados finales de mascotas, tiempos y resiliencia · Luisa M. Segura Cedeño
+# Resultados de la entrega final · 26 de noviembre de 2026
 
-**Rama de trabajo:** `trabajo/luisa-evidencia-final` (sobre `02-separacion`)  
-**Fecha:** noviembre de 2026
+## Alcance y entorno
 
----
+Ensayos locales con Docker Compose, una instancia PostgreSQL con tres bases lógicas, Traefik, dos réplicas de reportes, identidad y alertas. Luisa preparó el script de 20 suscriptores y el análisis del outbox; Oscar corrigió el contrato del extravío, el nombre del contenedor de base y ejecutó los ensayos tras integrar el PR #20. Se usaron cuentas y municipios de prueba nuevos en cada repetición. Los tiempos se miden desde la respuesta HTTP de publicación hasta la observación de la alerta en la bandeja por API; **no** miden el tiempo hasta que una persona la ve en pantalla.
 
-## 1. Edición de ficha propia y conservación de reportes publicados
+## Funcionalidad y autorización
 
-- **Implementación:** `PUT /api/mascotas/{pet_id}` (`app/pets/router.py`) y `update_pet_for_owner` (`app/pets/service.py`) actualizan `name`, `species` y `traits` únicamente cuando `Pet.id == pet_id` y `Pet.owner_id == actor_id`. Si la mascota no existe o pertenece a otro usuario, se responde `404` sin modificar registros ajenos.
-- **Pruebas automatizadas (`tests/test_pets.py`):**
-  - Creación, listado, consulta y edición de ficha propia.
-  - Rechazo (`404`) al intentar consultar o editar la ficha de otro dueño.
-- **Conservación en reportes publicados:** al publicar un extravío, los datos descriptivos del reporte quedan registrados en el reporte y no se sobreescriben retroactivamente si el dueño edita su ficha posteriormente.
+`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **38 pruebas**. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
 
----
+## Entrega con 20 suscriptores
 
-## 2. Decisión arquitectónica: Outbox transaccional y ACK frente a aviso síncrono
-
-- **Decisión:** registrar el evento en la tabla `outbox` dentro de la misma transacción local de `reportes` al confirmar el reporte, y que el servicio `alertas` consuma eventos y envíe `ACK` (`POST .../internal/events/{event_id}/ack`) **después** de persistir las alertas de forma idempotente (`event_id`, `recipient_id`).
-- **Alternativas descartadas:**
-  1. *Enviar alertas de forma síncrona dentro del `POST` de publicación:* acoplaba la latencia y disponibilidad de `alertas` y de todos los destinatarios a la respuesta HTTP del reporte; si `alertas` fallaba o tardaba, la publicación corría riesgo de fallar o bloquearse.
-  2. *Enviar `ACK` antes de confirmar las alertas en la BD de `alertas`:* si el proceso de `alertas` caía tras el `ACK` y antes del `commit`, el evento se perdería sin reintento.
-
----
-
-## 3. Comandos reproducibles de tiempos y fallas
-
-Con `docker compose up --build -d` en ejecución (sin borrar volúmenes):
+Comando reproducible:
 
 ```bash
-# 3 repeticiones con 20 suscriptores (hallazgos y extravíos)
-python3 scripts/resilience_20_subscribers.py --subscribers 20 --trials 3 --timeout 150
-
-# Incluye pruebas de caída de `alertas` y caída de `postgres`
 python3 scripts/resilience_20_subscribers.py --subscribers 20 --trials 3 --timeout 150 --with-faults
-cat << 'EOF' > docs/RESULTADOS_FINALES.md
-# Resultados finales de mascotas, tiempos y resiliencia · Luisa M. Segura Cedeño
+```
 
-**Rama de trabajo:** `trabajo/luisa-evidencia-final` (sobre `02-separacion`)  
-**Fecha:** noviembre de 2026
+| Ensayo | Hallazgo: POST (s) | Hallazgo: primera / todas (s) | Extravío: POST (s) | Extravío: primera / todas (s) |
+|---|---:|---:|---:|---:|
+| 1 | 0.006 | 8.573 / 9.147 | 0.025 | 9.751 / 9.806 |
+| 2 | 0.006 | 6.876 / 7.442 | 0.020 | 9.684 / 9.744 |
+| 3 | 0.006 | 7.383 / 7.439 | 0.007 | 10.244 / 10.307 |
 
----
+En los seis reportes, **20 de 20 suscriptores** recibieron exactamente una alerta cada uno. El tiempo máximo hasta consultar las 20 alertas fue **10.307 s**, por debajo del objetivo de tres minutos en este entorno local. La muestra es pequeña: no establece una garantía de servicio para Internet o cargas mayores. La página web consulta la bandeja periódicamente, por lo que su visualización puede tardar más que la creación en la base.
 
-## 1. Edición de ficha propia y conservación de reportes publicados
+## Fallas observadas
 
-- **Implementación:** `PUT /api/mascotas/{pet_id}` (`app/pets/router.py`) y `update_pet_for_owner` (`app/pets/service.py`) actualizan `name`, `species` y `traits` únicamente cuando `Pet.id == pet_id` y `Pet.owner_id == actor_id`. Si la mascota no existe o pertenece a otro usuario, se responde `404` sin modificar registros ajenos.
-- **Pruebas automatizadas (`tests/test_pets.py`):**
-  - Creación, listado, consulta y edición de ficha propia.
-  - Rechazo (`404`) al intentar consultar o editar la ficha de otro dueño.
-- **Conservación en reportes publicados:** al publicar un extravío, los datos descriptivos del reporte quedan registrados en el reporte y no se sobreescriben retroactivamente si el dueño edita su ficha posteriormente.
+- **Alertas detenidas:** un hallazgo se publicó con HTTP 201. Al reiniciar `alertas`, la cuenta suscrita recibió una sola alerta; el script la observó **2.518 s** después de volver a consultar. El evento quedó pendiente mientras el servicio estuvo detenido.
+- **PostgreSQL detenido:** la publicación devolvió HTTP 500, no 201. El servicio se reinició sin borrar el volumen. El script comprueba que el intento fallido no aparezca en la lista al recuperarse.
+- **Una réplica de reportes detenida:** `scripts/verify_gateway.py` completó el registro, hallazgo, entrega de alerta y bandeja con `reportes_b` mientras `reportes_a` estaba detenida; después reinició la primera. Traefik necesita unos segundos para detectar una caída y puede responder 502 en ese intervalo.
+- **Identidad detenida:** el JWT vigente puede seguir autorizando publicación porque reportes verifica la firma localmente. Registro y login dependen de identidad. Esta condición se comprueba por separado en la verificación final.
 
----
+## Decisión: outbox y ACK
 
-## 2. Decisión arquitectónica: Outbox transaccional y ACK frente a aviso síncrono
+El reporte y el evento pendiente se confirman en una transacción local. El trabajador de alertas lee el evento por HTTP interno, guarda las alertas y después envía ACK. Se descartó enviar alertas sincrónicamente dentro del POST de publicación: una falla del servicio de alertas habría impedido guardar un reporte válido. También se descartó confirmar el evento antes de guardar las alertas: un reinicio en ese punto habría perdido el aviso. La unicidad por evento y destinatario impide duplicados visibles si se repite el consumo.
 
-- **Decisión:** registrar el evento en la tabla `outbox` dentro de la misma transacción local de `reportes` al confirmar el reporte, y que el servicio `alertas` consuma eventos y envíe `ACK` (`POST .../internal/events/{event_id}/ack`) **después** de persistir las alertas de forma idempotente (`event_id`, `recipient_id`).
-- **Alternativas descartadas:**
-  1. *Enviar alertas de forma síncrona dentro del `POST` de publicación:* acoplaba la latencia y disponibilidad de `alertas` y de todos los destinatarios a la respuesta HTTP del reporte; si `alertas` fallaba o tardaba, la publicación corría riesgo de fallar o bloquearse.
-  2. *Enviar `ACK` antes de confirmar las alertas en la BD de `alertas`:* si el proceso de `alertas` caía tras el `ACK` y antes del `commit`, el evento se perdería sin reintento.
+## Límites
 
----
-
-## 3. Comandos reproducibles de tiempos y fallas
-
-Con `docker compose up --build -d` en ejecución (sin borrar volúmenes):
-
-```bash
-# 3 repeticiones con 20 suscriptores (hallazgos y extravíos)
-python3 scripts/resilience_20_subscribers.py --subscribers
+El ensayo no prueba despliegue público, entrega por correo o push, ni disponibilidad de la instancia PostgreSQL. Las tres bases son lógicas y comparten ese punto de falla físico. La medición observó alertas por API, no el instante en que una persona abre la bandeja. Para una versión posterior convendría medir en varias máquinas y normalizar los nombres de municipio.

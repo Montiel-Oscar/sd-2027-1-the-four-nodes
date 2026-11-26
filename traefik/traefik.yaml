@@ -1,8 +1,6 @@
 entryPoints:
   web:
     address: ":80"
-  legacyAlerts:
-    address: ":8001"
   internal:
     address: ":8080"
 
