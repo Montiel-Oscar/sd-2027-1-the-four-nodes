@@ -15,7 +15,7 @@ La rama `01-monolito` guarda la primera entrega: una aplicación FastAPI y una b
 
 **Entrega del curso:** sábado 17 de octubre de 2026, antes de las 07:00. El equipo comparte la liga del repositorio en su comentario de la Discussion #44 cuando la rama `01-monolito` tenga el flujo principal funcionando.
 
-La [guía de colaboración](docs/COMO_COLABORAR.md) explica cómo entrar a la rama, crear una rama personal y entregar cambios con GitHub Desktop o Git. El [reparto de tareas](docs/REPARTO_01_MONOLITO.md) indica qué hará cada integrante y cómo integrar el trabajo.
+Las instrucciones de colaboración y el reparto originales permanecen en la rama histórica `01-monolito`.
 
 ## Estado del monolito · 5 de noviembre de 2026
 
@@ -36,7 +36,7 @@ Abrir `http://localhost:8000/` para la página inicial, `http://localhost:8000/d
 
 ## Ramas del proyecto
 
-Las tres ramas permanentes son `main` (entrega final), `01-monolito` (primera entrega terminada) y `02-separacion` (desarrollo distribuido terminado). Las ramas personales son temporales: parten de su rama de etapa y se borran después de integrar el PR.
+Las tres ramas permanentes son `main` (entrega final), `01-monolito` (primera entrega terminada) y `02-separacion` (desarrollo distribuido terminado). `main` y `02-separacion` contienen el mismo commit de la versión final.
 
 ## Versión final distribuida: `main` y `02-separacion`
 
@@ -69,9 +69,7 @@ La suite Python pasó **39 pruebas**. El recorrido HTTP, el balanceo con una ré
 ### Entrega y presentación
 
 - [Reporte final PDF](docs/reporte-final.pdf), elaborado desde [fuentes LaTeX](docs/reporte_proyecto/main.tex) basadas en el estilo del reporte de referencia.
-- [Diapositivas PDF](docs/pitch/diapositivas.pdf) y [HTML navegable](docs/pitch/diapositivas.html).
-- [Guion de voces y clics de la demo](docs/pitch/GUION_FINAL.md).
-- [Guía paso a paso para abrir y demostrar la app](docs/pitch/GUIA_DEMO_PASO_A_PASO.md).
+- [Presentación en Canva](https://canva.link/ceqim33wqulq7q9) y [copia PDF de 10 diapositivas](docs/pitch/diapositivas.pdf).
 - [Resultados y fallas](docs/RESULTADOS_FINALES.md).
 
 **Equipo:** Oscar Iván Montiel Juárez, Luisa María Segura Cedeño, Cecilia Ximena Solís Cisneros y Amy Valentina Veraza García. La entrega del curso es el **28 de noviembre de 2026 antes de las 07:00**, hora de Ciudad de México.

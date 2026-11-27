@@ -1,6 +1,0 @@
-{
-  "fecha_utc": "2026-11-15T18:08:07.789074+00:00",
-  "entorno": "APIs reales via TestClient, SQLite temporal; sin Docker, red ni balanceo",
-  "browser": "Microsoft Edge",
-  "resultado": "Dos cuentas aisladas; ficha separada, reutilizada y creada con reporte; hallazgo; alertas; privacidad; móvil; origen único"
-}

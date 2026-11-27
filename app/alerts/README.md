@@ -4,4 +4,4 @@
 
 `compose.yaml` le pasa `DATABASE_URL_ALERTS`, `AUTH_SECRET`, `INTERNAL_API_TOKEN` e `INTERNAL_API_URL`. El inicializador crea su base si no existe, incluso cuando el volumen viene de `01-monolito`. El trabajador consulta cada 10 segundos, guarda las alertas y luego confirma el evento; un reintento no duplica la bandeja por la restricción `(event_id, recipient_id)`.
 
-El contrato de suscripciones y bandeja está en [CONTRATOS_02_SEPARACION.md](../../docs/CONTRATOS_02_SEPARACION.md#alertas-luisa--amy). El estado de integración, las pruebas y lo que falta están en [ESTADO_02_SEPARACION.md](../../docs/ESTADO_02_SEPARACION.md).
+El comportamiento y las fallas observadas están documentados en [ARQUITECTURA_FINAL.md](../../docs/ARQUITECTURA_FINAL.md) y [RESULTADOS_FINALES.md](../../docs/RESULTADOS_FINALES.md). Para levantar y probar la aplicación completa, usar el [README principal](../../README.md).

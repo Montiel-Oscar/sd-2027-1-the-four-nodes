@@ -104,18 +104,19 @@ docker compose run --rm --volume "$PWD:/workspace" \
 python3 scripts/resilience_20_subscribers.py \
   --subscribers 20 --trials 3 --timeout 150 --with-faults
 \end{verbatim}
-Comprobar \url{http://localhost:8000/health/ready}; abrir \url{http://localhost:8000/} para la interfaz y \url{http://localhost:8000/docs} para la API. Crear dos cuentas: la primera guarda una mascota y publica un extravío con punto en el mapa; la segunda sigue el mismo municipio \emph{antes} de la publicación y luego consulta la bandeja. Abrir el enlace público en una pestaña sin sesión para ver el punto y el círculo. El ensayo de resiliencia crea datos de prueba en la base local y detiene/reinicia servicios; ejecutarlo sólo cuando no se esté mostrando la demo. \texttt{docker compose down} detiene los servicios sin borrar el volumen. La guía de clics está en \texttt{docs/pitch/GUIA\_DEMO\_PASO\_A\_PASO.md}; el pitch y sus voces, en \texttt{docs/pitch/GUION\_FINAL.md}.
+\Needspace{10\baselineskip}
+Comprobar \url{http://localhost:8000/health/ready}; abrir \url{http://localhost:8000/} para la interfaz y \url{http://localhost:8000/docs} para la API. Crear dos cuentas: la primera guarda una mascota y publica un extravío con punto en el mapa; la segunda sigue el mismo municipio \emph{antes} de la publicación y luego consulta la bandeja. Abrir el enlace público en una pestaña sin sesión para ver el punto y el círculo. El ensayo de resiliencia crea datos de prueba en la base local y detiene/reinicia servicios; ejecutarlo sólo cuando no se esté mostrando la demo. \texttt{docker compose down} detiene los servicios sin borrar el volumen. El README contiene los comandos de la entrega y la presentación está en \texttt{docs/pitch/diapositivas.pdf}.
 
 \section{Límites y qué haríamos distinto}
 El prototipo no tiene despliegue público, HTTPS, cola de mensajes externa, réplica de PostgreSQL ni notificaciones push. Leaflet se sirve localmente, pero las calles del mapa se cargan de OpenStreetMap con Internet; sin conexión, las coordenadas guardadas siguen disponibles. El aviso se consulta en una bandeja web. Un municipio escrito de forma diferente puede no coincidir exactamente con la suscripción. En una siguiente versión priorizaríamos normalizar ubicaciones y evaluar la usabilidad con personas reales; después mediríamos si hace falta un broker o replicación de datos. Esas mejoras no forman parte de la entrega demostrada. El círculo de 3 km es una ayuda visual y no indica que la mascota permanezca dentro de él.
 
 \section{Contribuciones del equipo}
-\small\begin{tabularx}{\textwidth}{@{}p{3.2cm}Y@{}}\toprule
+\small\begin{tabularx}{\textwidth}{@{}p{3.8cm}Y@{}}\toprule
 Integrante & Contribución verificable \\\midrule
 Oscar Iván Montiel Juárez & Reportes, hallazgos, outbox, gateway Traefik, dos réplicas, mapa y migración de coordenadas, integración final, documentación y este PDF. \\
 Luisa María Segura Cedeño & Mascotas, edición de ficha propia, servicio de alertas, guion de pruebas de resiliencia y resultados medidos. \\
 Cecilia Ximena Solís Cisneros & Registro, login, JWT y autorización integrados en la primera etapa; la separación final de identidad fue integrada por Oscar durante el cierre. \\
-Amy Valentina Veraza García & Interfaz web, fichas reutilizables, flujo de dos cuentas, diapositivas, capturas y guion de pitch. \\\bottomrule
+Amy Valentina Veraza García & Interfaz web, fichas reutilizables, flujo de dos cuentas y material visual para la presentación. \\\bottomrule
 \end{tabularx}\par\medskip
 El historial de commits y solicitudes de cambio del repositorio permite consultar las aportaciones individuales. La arquitectura final y las correcciones de integración se atribuyen a sus autores reales, sin presentar código de integración como trabajo no realizado por otra persona.
 \end{document}
