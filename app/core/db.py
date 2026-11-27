@@ -4,7 +4,7 @@ import os
 from functools import lru_cache
 from collections.abc import Iterator
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session
 
 
@@ -39,3 +39,12 @@ def init_db() -> None:
             FoundPetReport.__table__, OutboxEventV1.__table__,
         ],
     )
+    # create_all no agrega columnas a un volumen que ya contiene reportes.
+    # Las coordenadas son anulables para conservar enlaces históricos sin ubicación exacta.
+    engine = get_engine()
+    for table in ("missing_pet_reports", "found_pet_reports"):
+        existing = {column["name"] for column in inspect(engine).get_columns(table)}
+        with engine.begin() as connection:
+            for column in ("latitude", "longitude"):
+                if column not in existing:
+                    connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} DOUBLE PRECISION"))

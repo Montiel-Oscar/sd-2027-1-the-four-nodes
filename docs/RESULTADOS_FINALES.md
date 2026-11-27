@@ -6,9 +6,13 @@ Ensayos locales con Docker Compose, una instancia PostgreSQL con tres bases lóg
 
 ## Funcionalidad y autorización
 
-`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **38 pruebas**. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
+`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **39 pruebas**. La prueba de navegador con dos cuentas confirmó que se puede marcar un punto en extravío y hallazgo y que los enlaces públicos muestran el mapa. Las coordenadas de reportes anteriores son opcionales y siguen disponibles sus ubicaciones escritas. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
 
 ## Entrega con 20 suscriptores
+
+Las mediciones siguientes se hicieron antes de añadir el mapa; el script de API sigue enviando ubicación textual. La incorporación del mapa se verificó por separado y no se presenta como una nueva medición de latencia.
+
+Tras integrar el mapa se repitió un ensayo con **20 suscriptores**, sin coordenadas en el script de API: hallazgo 20/20 en **9.170 s** y extravío 20/20 en **9.798 s**, sin alertas duplicadas. Esto verifica compatibilidad del flujo de alertas; no mide la carga de teselas ni la interacción humana con el mapa.
 
 Comando reproducible:
 

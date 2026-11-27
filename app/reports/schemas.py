@@ -27,6 +27,8 @@ class MissingPetInput(BaseModel):
     municipality: str = Field(min_length=1, max_length=120)
     neighborhood: str = Field(min_length=1, max_length=120)
     landmark: str = Field(min_length=1, max_length=250)
+    latitude: float | None = Field(default=None, ge=-90, le=90, allow_inf_nan=False)
+    longitude: float | None = Field(default=None, ge=-180, le=180, allow_inf_nan=False)
     public_phone: str | None = Field(default=None, max_length=32)
     show_phone: bool = False
 
@@ -58,6 +60,8 @@ class MissingPetInput(BaseModel):
             raise ValueError("Envía pet_id o pet, exactamente uno")
         if self.show_phone and not self.public_phone:
             raise ValueError("Envía public_phone si show_phone es verdadero")
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Envía latitude y longitude juntas")
         return self
 
 
@@ -69,6 +73,8 @@ class MissingPetPublic(BaseModel):
     municipality: str
     neighborhood: str
     landmark: str
+    latitude: float | None
+    longitude: float | None
     public_phone: str | None
     created_at: datetime
 
@@ -79,6 +85,8 @@ class FoundPetInput(BaseModel):
     municipality: str = Field(min_length=1, max_length=120)
     neighborhood: str = Field(min_length=1, max_length=120)
     landmark: str = Field(min_length=1, max_length=250)
+    latitude: float | None = Field(default=None, ge=-90, le=90, allow_inf_nan=False)
+    longitude: float | None = Field(default=None, ge=-180, le=180, allow_inf_nan=False)
     public_phone: str | None = Field(default=None, max_length=32)
     show_phone: bool = False
 
@@ -108,6 +116,8 @@ class FoundPetInput(BaseModel):
     def check_contact(self) -> "FoundPetInput":
         if self.show_phone and not self.public_phone:
             raise ValueError("Envía public_phone si show_phone es verdadero")
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Envía latitude y longitude juntas")
         return self
 
 
@@ -119,6 +129,8 @@ class FoundPetPublic(BaseModel):
     municipality: str
     neighborhood: str
     landmark: str
+    latitude: float | None
+    longitude: float | None
     public_phone: str | None
     created_at: datetime
 

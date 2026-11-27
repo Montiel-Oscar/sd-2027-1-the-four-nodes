@@ -3,7 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish,mexico]{babel}
-\usepackage{lmodern,graphicx,geometry,fancyhdr,array,booktabs,tabularx,ragged2e,enumitem,setspace,xcolor,tikz,hyperref,float}
+\usepackage{lmodern,graphicx,geometry,fancyhdr,array,booktabs,tabularx,ragged2e,enumitem,setspace,xcolor,tikz,hyperref,float,needspace}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric}
 \graphicspath{{portada_img/}}
 \input{portada.tex}
@@ -24,14 +24,14 @@
 \vspace{0.2em}{\small Proyecto final de Sistemas Distribuidos, FI-UNAM\par}
 \end{center}
 \begin{abstract}
-Cuando se extravía una mascota, su dueño suele colocar carteles y preguntar en la zona. La información llega a pocas personas y los posibles hallazgos quedan dispersos. Desarrollamos una aplicación web para registrar mascotas, publicar extravíos y hallazgos con ubicación textual pública, y avisar a quienes siguen un municipio. El prototipo separa identidad, reportes y alertas en procesos; Traefik distribuye las solicitudes de reportes entre dos réplicas. El reporte y su evento se guardan juntos; la alerta se crea después mediante un trabajador que consulta eventos pendientes y confirma su procesamiento. La base de datos es una instancia PostgreSQL con tres bases lógicas, por lo que su caída afecta al sistema completo. Este documento describe el alcance realmente implementado, las decisiones y las pruebas locales, con sus límites.
+Cuando se extravía una mascota, su dueño suele colocar carteles y preguntar en la zona. La información llega a pocas personas y los posibles hallazgos quedan dispersos. Desarrollamos una aplicación web para registrar mascotas, publicar extravíos y hallazgos con ubicación textual y un punto aproximado en el mapa, y avisar a quienes siguen un municipio. El prototipo separa identidad, reportes y alertas en procesos; Traefik distribuye las solicitudes de reportes entre dos réplicas. El reporte y su evento se guardan juntos; la alerta se crea después mediante un trabajador que consulta eventos pendientes y confirma su procesamiento. La base de datos es una instancia PostgreSQL con tres bases lógicas, por lo que su caída afecta al sistema completo. Este documento describe el alcance realmente implementado, las decisiones y las pruebas locales, con sus límites.
 \end{abstract}
 \textbf{Palabras clave:} sistemas distribuidos; mascotas extraviadas; gateway; outbox; consistencia eventual.
 
 \section{Problema, usuarios y alcance}
 La persona que perdió una mascota necesita llegar a más vecinos con rapidez. Los carteles cercanos y las preguntas directas tienen alcance limitado; un localizador o chip no está disponible para todos. Nuestro producto ofrece un reporte público con enlace compartible. Una persona que encontró una mascota puede registrar el hallazgo sin tener una ficha previa. Otra persona sigue un municipio y consulta una bandeja de alertas para reportes publicados después de su suscripción.
 
-La primera versión entrega registro e inicio de sesión, fichas propias, edición de ficha, extravíos, hallazgos, filtros por municipio, enlaces públicos y bandeja. La ubicación se expresa con municipio, colonia y referencia pública. No hay mapa, GPS, fotografías cargadas por el usuario, correo, mensajes telefónicos ni cotejo automático entre reportes. El teléfono sólo aparece en el enlace público si quien publica lo autoriza. El objetivo de alerta es menos de tres minutos; las mediciones de este equipo se presentan en la sección de resultados.
+La primera versión entrega registro e inicio de sesión, fichas propias, edición de ficha, extravíos, hallazgos, filtros por municipio, enlaces públicos y bandeja. La ubicación se expresa con municipio, colonia, referencia pública y un punto aproximado elegido en el mapa. El enlace público centra un círculo de 3 km en ese punto. No hay rastreo GPS continuo, fotografías cargadas por el usuario, correo, mensajes telefónicos ni cotejo automático entre reportes. Los reportes anteriores a esta función conservan su texto sin coordenadas. El teléfono sólo aparece en el enlace público si quien publica lo autoriza. El objetivo de alerta es menos de tres minutos; las mediciones de este equipo se presentan en la sección de resultados.
 
 \section{Diagrama funcional}
 \begin{figure}[H]\centering
@@ -46,7 +46,9 @@ La primera versión entrega registro e inicio de sesión, fichas propias, edici�
 \end{tikzpicture}
 \caption{Recorridos principales. Las alertas se generan para suscripciones previas al evento.}
 \end{figure}
-Una ficha puede guardarse sin publicar. Al crear un extravío se elige una ficha propia existente o se crea una nueva junto con el reporte. La descripción del reporte se conserva como instantánea: editar la ficha después no cambia retroactivamente una publicación. Los enlaces públicos se abren sin sesión; crear fichas, publicar, seguir un municipio y leer la bandeja requieren token.
+Una ficha puede guardarse sin publicar. Al crear un extravío se elige una ficha propia existente o se crea una nueva junto con el reporte. La descripción y el punto del reporte se conservan como instantánea: editar la ficha después no cambia retroactivamente una publicación. Los enlaces públicos se abren sin sesión; crear fichas, publicar, seguir un municipio y leer la bandeja requieren token.
+
+Al publicar desde la web se marca con un clic el lugar aproximado. El servidor valida latitud y longitud y las guarda como columnas anulables: los reportes históricos siguen abriendo con su ubicación escrita. La página pública centra el mapa en el punto rojo y dibuja un círculo de 3 km. No se interpreta como ubicación actual de la mascota. La cartografía necesita Internet, aunque el código de Leaflet se incluye en la aplicación.
 
 \section{Arquitectura y propiedad de datos}
 \begin{figure}[H]\centering
@@ -80,11 +82,12 @@ La publicación responde \texttt{201} cuando el reporte y su evento quedan confi
 Si una copia de reportes cae, Traefik la detecta y dirige solicitudes a la otra. Durante la detección puede haber un error transitorio y el cliente debe reintentar con la misma \texttt{Idempotency-Key}. Si cae identidad, registro y login dejan de funcionar, pero un JWT vigente puede seguir sirviendo para publicar. Si cae PostgreSQL, no se puede confirmar una nueva publicación; el sistema no ofrece disponibilidad total ante esa falla.
 
 \section{Pruebas y resultados}
-El equipo probó la aplicación con Docker Compose y PostgreSQL. La suite Python contiene 38 pruebas aprobadas tras integrar la edición de mascotas y reparar una mezcla accidental con una versión anterior de autenticación y alertas. Un recorrido HTTP confirmó registro, publicación idempotente, entrega de alerta y bandeja privada. Otra prueba detuvo \texttt{reportes\_a}; el mismo recorrido siguió funcionando con \texttt{reportes\_b}. La interfaz se verificó en Chrome con dos cuentas, fichas separadas y reutilizadas, ambos tipos de reporte, suscripción, bandeja y vista de 390 px.
+El equipo probó la aplicación con Docker Compose y PostgreSQL. La suite Python contiene 39 pruebas aprobadas tras integrar la edición de mascotas y reparar una mezcla accidental con una versión anterior de autenticación y alertas. Un recorrido HTTP confirmó registro, publicación idempotente, entrega de alerta y bandeja privada. Otra prueba detuvo \texttt{reportes\_a}; el mismo recorrido siguió funcionando con \texttt{reportes\_b}. La interfaz se verificó en Chrome con dos cuentas, fichas separadas y reutilizadas, ambos tipos de reporte con punto en el mapa, enlaces públicos con círculo de 3 km, suscripción, bandeja y vista de 390 px.
 
 \input{resultados.tex}
 
-Cada ensayo usa un municipio nuevo para evitar alertas de publicaciones anteriores. Los datos de prueba permanecen en el volumen hasta que se elimine de manera explícita.
+Los tiempos de 20 suscriptores se midieron antes de añadir el mapa y por API, enviando sólo la ubicación escrita. Se comprobó por separado en Chrome que los dos formularios guardan coordenadas y que los enlaces públicos muestran el punto y el círculo. Cada ensayo usa un municipio nuevo para evitar alertas de publicaciones anteriores. Los datos de prueba permanecen en el volumen hasta que se elimine de manera explícita.
+Tras añadir el mapa, otro ensayo de 20 suscriptores por API obtuvo 20/20 alertas únicas por tipo de reporte; se consultaron todas en 9.170 s para un hallazgo y 9.798 s para un extravío. Esta medición no incluye la carga de teselas ni el tiempo de interacción con el mapa.
 
 \section{Cómo levantar y probar el prototipo}
 Desde la raíz del repositorio, con Docker, Docker Compose y Python 3 instalados:
@@ -99,12 +102,12 @@ python3 scripts/resilience_20_subscribers.py \
 Abrir \url{http://localhost:8000/} para la interfaz y \url{http://localhost:8000/docs} para la documentación de reportes. Registro, login y alertas funcionan desde el mismo origen. La suite se ejecuta con el comando indicado en el README; \texttt{docker compose down} detiene los servicios sin borrar el volumen. Para reproducir la demo de navegador, seguir \texttt{docs/pitch/GUION\_FINAL.md} y usar dos perfiles independientes.
 
 \section{Límites y qué haríamos distinto}
-El prototipo no tiene despliegue público, HTTPS, cola de mensajes externa, réplica de PostgreSQL ni notificaciones push. El aviso se consulta en una bandeja web. Un municipio escrito de forma diferente puede no coincidir exactamente con la suscripción. En una siguiente versión priorizaríamos normalizar ubicaciones y evaluar la usabilidad con personas reales; después mediríamos si hace falta un broker o replicación de datos. Esas mejoras no forman parte de la entrega demostrada.
+El prototipo no tiene despliegue público, HTTPS, cola de mensajes externa, réplica de PostgreSQL ni notificaciones push. Leaflet se sirve localmente, pero las calles del mapa se cargan de OpenStreetMap con Internet; sin conexión, las coordenadas guardadas siguen disponibles. El aviso se consulta en una bandeja web. Un municipio escrito de forma diferente puede no coincidir exactamente con la suscripción. En una siguiente versión priorizaríamos normalizar ubicaciones y evaluar la usabilidad con personas reales; después mediríamos si hace falta un broker o replicación de datos. Esas mejoras no forman parte de la entrega demostrada. El círculo de 3 km es una ayuda visual y no indica que la mascota permanezca dentro de él.
 
 \section{Contribuciones del equipo}
 \small\begin{tabularx}{\textwidth}{@{}p{3.2cm}Y@{}}\toprule
 Integrante & Contribución verificable \\\midrule
-Oscar Iván Montiel Juárez & Reportes, hallazgos, outbox, gateway Traefik, dos réplicas, integración final, documentación y este PDF. \\
+Oscar Iván Montiel Juárez & Reportes, hallazgos, outbox, gateway Traefik, dos réplicas, mapa y migración de coordenadas, integración final, documentación y este PDF. \\
 Luisa María Segura Cedeño & Mascotas, edición de ficha propia, servicio de alertas, guion de pruebas de resiliencia y resultados medidos. \\
 Cecilia Ximena Solís Cisneros & Registro, login, JWT y autorización integrados en la primera etapa; la separación final de identidad fue integrada por Oscar durante el cierre. \\
 Amy Valentina Veraza García & Interfaz web, fichas reutilizables, flujo de dos cuentas, diapositivas, capturas y guion de pitch. \\\bottomrule

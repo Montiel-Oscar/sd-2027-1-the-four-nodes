@@ -24,6 +24,9 @@ def main():
     def serve(route):
         nonlocal fail_publication, inbox_calls, next_error
         request = route.request
+        if request.url.startswith("https://tile.openstreetmap.org/"):
+            route.fulfill(status=204)
+            return
         assert request.url.startswith("http://localhost:8000/"), request.url
         path = request.url.split("localhost:8000")[-1].split("localhost:8001")[-1]
         path = path.split("?")[0]
@@ -107,9 +110,10 @@ def main():
         form = page.locator("#found-form")
         for name, value in {"description":"Perro con collar rojo", "seen_at":"2026-11-12T10:30", "municipality":"Coyoacán", "neighborhood":"Centro", "landmark":"Parque"}.items():
             form.locator(f'[name="{name}"]').fill(value)
-        form.get_by_role("button").click()
+        page.locator("#found-map").click(position={"x":180,"y":140})
+        form.get_by_role("button", name="Publicar hallazgo").click()
         expect(page.locator("#found-status")).to_contain_text("No pudimos conectar")
-        form.get_by_role("button").click()
+        form.get_by_role("button", name="Publicar hallazgo").click()
         expect(page.locator("#found-success")).to_be_visible()
         publications = [call for call in calls if call[0].endswith("/hallazgos") and call[1] == "POST"]
         assert publications[0][2]["idempotency-key"] == publications[1][2]["idempotency-key"]
@@ -117,13 +121,13 @@ def main():
         assert "public_phone" not in json.loads(publications[0][3])
         form.locator('[name="show_phone"]').check()
         form.locator('[name="public_phone"]').fill("5551234567")
-        form.get_by_role("button").click()
+        form.get_by_role("button", name="Publicar hallazgo").click()
         expect(page.locator("#found-success")).to_be_visible()
         latest = [call for call in calls if call[0].endswith("/hallazgos") and call[1] == "POST"][-1]
         assert latest[2]["idempotency-key"] != publications[0][2]["idempotency-key"]
         assert json.loads(latest[3])["public_phone"] == "5551234567"
         next_error = 409
-        form.get_by_role("button").click()
+        form.get_by_role("button", name="Publicar hallazgo").click()
         expect(page.locator("#found-status")).to_contain_text("Conflicto")
         page.locator("#subscription-form input").fill("Coyoacán")
         page.locator("#subscription-form button").click()
@@ -143,6 +147,7 @@ def main():
         page.goto(f"http://localhost:8000/reportes/hallazgos/{REPORT_ID}")
         expect(page.locator("#pet-traits")).to_have_text("<img src=x onerror=alert(1)>")
         expect(page.locator("#contact")).to_be_hidden()
+        expect(page.locator("#report-map-unavailable")).to_be_visible()
         assert page.locator("#pet-traits img").count() == 0
         page.goto("http://localhost:8000/")
         page.locator(".inline-account summary").click()
@@ -157,6 +162,9 @@ def main():
         page.locator("#wizard-next").click()
         for name, value in {"seen_at":"2026-11-12T10:30", "municipality":"Coyoacán", "neighborhood":"Centro", "landmark":"Parque"}.items():
             form.locator(f'[name="{name}"]').fill(value)
+        page.locator("#wizard-next").click()
+        expect(page.locator("#status")).to_contain_text("Haz clic en el mapa")
+        page.locator("#missing-map").click(position={"x":180,"y":140})
         page.locator("#wizard-next").click()
         page.locator("#wizard-next").click()
         fail_publication = True
@@ -173,6 +181,7 @@ def main():
         page.locator("#wizard-next").click()
         for name, value in {"seen_at":"2026-11-15T10:30", "municipality":"Coyoacán", "neighborhood":"Centro", "landmark":"Parque"}.items():
             page.locator(f'#publish-form [name="{name}"]').fill(value)
+        page.locator("#missing-map").click(position={"x":180,"y":140})
         page.locator("#wizard-next").click()
         page.locator("#wizard-next").click()
         page.locator('#publish-form button[type="submit"]').click()

@@ -32,3 +32,15 @@ button,a,input,select,textarea,summary{scroll-margin:24px}
 input:disabled,select:disabled,textarea:disabled{opacity:1;background:#eef3f0;color:#405f52}
 .community #pets-list{margin-top:20px}.community #refresh-pets{margin-top:16px}
 @media(max-width:580px){.community input,.community textarea,.community select{font-size:16px}.saved-pets select{max-width:100%}}
+
+/* Punto seleccionado y área aproximada de 3 km. */
+.location-picker{background:#f7faf8;border:1px solid #cadbd1;border-radius:10px;padding:14px;min-width:0}
+.location-picker strong{display:block;color:#214a3b;font-size:13px}
+.location-picker p,#report-map-section p,#report-map-unavailable{font-size:12px;line-height:1.5;color:#536b5e}
+.location-picker button{width:auto!important;margin:0 0 12px!important;display:inline-flex!important;background:#e7f4ec!important;color:#174e3b!important;border:1px solid #abcdbb!important}
+.location-map{height:320px;width:100%;border-radius:9px;border:1px solid #cbd8d1;overflow:hidden;background:#e8eeeb;z-index:0}
+#report-map{height:420px}
+.location-picker [role=status]{margin:8px 0 0;min-height:1.5em;color:#305a46}
+#report-map-section{margin-top:24px}
+.map-credit{font-size:10px!important}
+@media(max-width:580px){.location-map{height:280px}#report-map{height:320px}}

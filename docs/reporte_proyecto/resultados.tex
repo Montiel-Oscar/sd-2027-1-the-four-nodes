@@ -11,4 +11,5 @@ Ensayo & Hallazgo POST & Hallazgo 20/20 & Extravío POST & Extravío 20/20 \\\mi
 \end{table}
 En los seis reportes, los 20 suscriptores recibieron una sola alerta cada uno. El máximo observado hasta consultar todas las alertas fue \textbf{10.307 s}, menor que el objetivo de tres minutos en este entorno local. El trabajador revisa eventos cada diez segundos; la página abierta consulta la bandeja a intervalos, por lo que su actualización puede ocurrir después de la medición por API.
 
+\Needspace{7\baselineskip}
 Al detener \texttt{alertas}, un hallazgo todavía respondió HTTP 201. Después de reiniciar el servicio, la alerta única se observó en 2.518 s desde la nueva espera. Al detener PostgreSQL, la publicación respondió HTTP 500 y no confirmó un reporte. Se reinició la base sin borrar volúmenes. La prueba de caída de una réplica de reportes también completó publicación y alerta usando la otra copia. Ninguna de estas pruebas garantiza disponibilidad ante caída de PostgreSQL ni el mismo tiempo en redes externas.

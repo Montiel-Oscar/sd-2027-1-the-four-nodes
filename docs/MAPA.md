@@ -1,0 +1,11 @@
+# Punto aproximado en el mapa
+
+Al publicar un extravío o hallazgo desde la web, la persona mueve el mapa y hace clic en el lugar aproximado. La interfaz exige ese clic antes de publicar. Puede pulsar **Centrar en mi ubicación** para acercar la vista, pero sólo después de dar permiso al navegador; ese botón no selecciona el punto automáticamente. No debe marcar un domicilio particular.
+
+La API recibe `latitude` y `longitude` juntas, valida sus rangos y las guarda con el reporte. Las columnas son anulables para conservar los reportes creados antes del mapa; éstos siguen mostrando municipio, colonia y referencia. El comando normal `docker compose up --build -d` ejecuta una migración idempotente que agrega las dos columnas si faltan en un volumen anterior. Las cuentas y reportes anteriores no se borran.
+
+El enlace público muestra un punto rojo y un círculo de **3 km de radio** centrado en él. Es un área visual de referencia, no una ubicación en tiempo real ni una predicción de por dónde pasó la mascota. La búsqueda y las alertas siguen funcionando **por municipio**, no por distancia entre coordenadas. La ubicación escrita sigue siendo obligatoria.
+
+[Leaflet 1.9.4](https://leafletjs.com/download) se sirve desde `app/web/static/vendor/leaflet/` con su licencia BSD de dos cláusulas. Las calles se cargan desde las teselas de OpenStreetMap cuando el navegador tiene Internet. La atribución aparece dentro del mapa; no hay precarga masiva ni modo sin conexión. Para un despliegue público o tráfico alto habría que revisar y cumplir la [política vigente de teselas de OpenStreetMap](https://operations.osmfoundation.org/policies/tiles/) o usar un proveedor propio. Si las teselas no están disponibles, el punto y el círculo todavía se dibujan, pero no se ven las calles.
+
+Para demostrarlo, seguir la [guía de pestañas y clics](pitch/GUIA_DEMO_PASO_A_PASO.md). Los ensayos de latencia de 20 suscriptores se hicieron antes de este cambio y con reportes enviados por API sin coordenadas; la función del mapa se verificó aparte con navegador real y pruebas del contrato.

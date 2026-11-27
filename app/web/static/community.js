@@ -62,7 +62,8 @@ foundForm.elements.show_phone.addEventListener("change", () => {
 foundForm.addEventListener("input", () => { $("#found-success").hidden = true; });
 wireForm("#found-form", "#found-status", async form => {
   const f = form.elements;
-  const payload = {description:f.description.value, seen_at:new Date(f.seen_at.value).toISOString(), municipality:f.municipality.value, neighborhood:f.neighborhood.value, landmark:f.landmark.value, show_phone:f.show_phone.checked};
+  if (!f.latitude.value || !f.longitude.value) throw new Error("Haz clic en el mapa para marcar el lugar aproximado del hallazgo.");
+  const payload = {description:f.description.value, seen_at:new Date(f.seen_at.value).toISOString(), municipality:f.municipality.value, neighborhood:f.neighborhood.value, landmark:f.landmark.value, latitude:Number(f.latitude.value), longitude:Number(f.longitude.value), show_phone:f.show_phone.checked};
   if (f.show_phone.checked) payload.public_phone = f.public_phone.value;
   const body = JSON.stringify(payload);
   // La API limita la clave por usuario; renovar el token no cambia el intento.

@@ -4,7 +4,7 @@
 
 | Rubro | Evidencia en el repositorio | Estado |
 |---|---|---|
-| Prototipo (30 %) | README, `compose.yaml`, `app/`, `traefik/`, 38 pruebas Python, `scripts/smoke_02.py`, `scripts/verify_gateway.py`, `scripts/resilience_20_subscribers.py` y recorrido real de Chrome | Terminado y probado localmente |
+| Prototipo (30 %) | README, `compose.yaml`, `app/`, `traefik/`, 39 pruebas Python, `scripts/smoke_02.py`, `scripts/verify_gateway.py`, `scripts/resilience_20_subscribers.py` y recorrido real de Chrome | Terminado y probado localmente |
 | Reporte PDF (30 %) | [Reporte final](reporte-final.pdf) y [fuentes LaTeX](reporte_proyecto/main.tex): portada, problema, dos diagramas, decisiones y alternativas, fallas, arranque, límites y aportes | Terminado |
 | Pitch (20 %) | [Siete diapositivas](pitch/diapositivas.pdf), [HTML](pitch/diapositivas.html) y [guion de cuatro voces y clics](pitch/GUION_FINAL.md) | Preparado; ensayo oral del equipo pendiente |
 | Defensa individual (20 %) | [Reparto técnico](pitch/GUION_FINAL.md), historial de PR y commits, preguntas de defensa | Cada integrante debe ensayar y responder por su contribución |
@@ -13,7 +13,7 @@
 
 - [x] Registro, login y `/me` en identidad separada; tercera base lógica; migración idempotente de usuarios anteriores.
 - [x] Mascotas propias, edición con control de dueño y descripción congelada en reportes publicados.
-- [x] Extravío y hallazgo, enlace público, suscripción por municipio y bandeja de alertas.
+- [x] Extravío y hallazgo, enlace público, suscripción por municipio y bandeja de alertas. Mapa con punto aproximado y círculo de 3 km para reportes nuevos.
 - [x] Traefik como única entrada pública y dos réplicas de reportes.
 - [x] Outbox, ACK y deduplicación; 20/20 suscriptores en tres ensayos de ambos tipos de reporte. Máximo local observado: 10.307 s.
 - [x] Caída de alertas, caída de una réplica, caída de identidad y caída de PostgreSQL comprobadas; sus límites están documentados.
@@ -26,4 +26,4 @@ Oscar integró la arquitectura de entrada, dos réplicas, la separación final d
 
 ## Límites declarados
 
-El único PostgreSQL físico sigue siendo un punto de falla. No hay mapa, despliegue público, HTTPS ni notificaciones push. El tiempo de 10.307 s corresponde a lectura por API en entorno local; la página consulta la bandeja periódicamente y no se midió el instante en que una persona la ve.
+El único PostgreSQL físico sigue siendo un punto de falla. El mapa usa teselas de OpenStreetMap y requiere Internet para ver las calles; los reportes históricos carecen de coordenadas. No hay despliegue público, HTTPS ni notificaciones push. El tiempo de 10.307 s corresponde a lectura por API en entorno local; la página consulta la bandeja periódicamente y no se midió el instante en que una persona la ve.

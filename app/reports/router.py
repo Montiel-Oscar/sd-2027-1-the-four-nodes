@@ -40,6 +40,8 @@ def _public(report: MissingPetReport, request: Request) -> MissingPetPublic:
         municipality=report.municipality,
         neighborhood=report.neighborhood,
         landmark=report.landmark,
+        latitude=report.latitude,
+        longitude=report.longitude,
         public_phone=report.public_phone if report.show_phone else None,
         created_at=report.created_at,
     )
@@ -54,6 +56,8 @@ def _public_found(report: FoundPetReport, request: Request) -> FoundPetPublic:
         municipality=report.municipality,
         neighborhood=report.neighborhood,
         landmark=report.landmark,
+        latitude=report.latitude,
+        longitude=report.longitude,
         public_phone=report.public_phone if report.show_phone else None,
         created_at=report.created_at,
     )
