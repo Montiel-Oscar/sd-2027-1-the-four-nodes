@@ -59,3 +59,17 @@ def community_javascript():
 @router.get("/web/pets.js", include_in_schema=False)
 def pets_javascript():
     return FileResponse(STATIC / "pets.js", media_type="text/javascript")
+
+
+@router.get("/web/map.js", include_in_schema=False)
+def map_javascript():
+    return FileResponse(STATIC / "map.js", media_type="text/javascript")
+
+
+@router.get("/web/vendor/leaflet/{filename}", include_in_schema=False)
+def leaflet_asset(filename: str):
+    from fastapi import HTTPException
+    if filename not in {"leaflet.js", "leaflet.css"}:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    media_type = "text/javascript" if filename.endswith(".js") else "text/css"
+    return FileResponse(STATIC / "vendor" / "leaflet" / filename, media_type=media_type)

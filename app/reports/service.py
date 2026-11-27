@@ -43,7 +43,9 @@ def _same_attempt(report: MissingPetReport, digest: str) -> MissingPetReport:
 def publish_missing_pet(
     session: Session, owner_id: UUID, key: str, data: MissingPetInput
 ) -> MissingPetReport:
-    digest = sha256(data.model_dump_json(exclude_none=False).encode("utf-8")).hexdigest()
+    # Mantener el mismo digest para reintentos de reportes anteriores al mapa.
+    exclude = {"latitude", "longitude"} if data.latitude is None else set()
+    digest = sha256(data.model_dump_json(exclude_none=False, exclude=exclude).encode("utf-8")).hexdigest()
     try:
         with session.begin():
             previous = _existing(session, owner_id, key)
@@ -61,6 +63,8 @@ def publish_missing_pet(
                 municipality=data.municipality,
                 neighborhood=data.neighborhood,
                 landmark=data.landmark,
+                latitude=data.latitude,
+                longitude=data.longitude,
                 public_phone=data.public_phone if data.show_phone else None,
                 show_phone=data.show_phone,
                 idempotency_key=key,
@@ -117,7 +121,8 @@ def _same_found_attempt(report: FoundPetReport, digest: str) -> FoundPetReport:
 def publish_found_pet(
     session: Session, owner_id: UUID, key: str, data: FoundPetInput
 ) -> FoundPetReport:
-    digest = sha256(data.model_dump_json(exclude_none=False).encode("utf-8")).hexdigest()
+    exclude = {"latitude", "longitude"} if data.latitude is None else set()
+    digest = sha256(data.model_dump_json(exclude_none=False, exclude=exclude).encode("utf-8")).hexdigest()
     try:
         with session.begin():
             previous = _existing_found(session, owner_id, key)
@@ -130,6 +135,8 @@ def publish_found_pet(
                 municipality=data.municipality,
                 neighborhood=data.neighborhood,
                 landmark=data.landmark,
+                latitude=data.latitude,
+                longitude=data.longitude,
                 public_phone=data.public_phone if data.show_phone else None,
                 show_phone=data.show_phone,
                 idempotency_key=key,

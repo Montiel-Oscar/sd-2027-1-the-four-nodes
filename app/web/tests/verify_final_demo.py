@@ -100,6 +100,7 @@ def run(browser, base, output, transport=None):
         page.on("request", lambda request: requests.append(request.url))
         if transport:
             page.route("**/*", transport)
+        page.route("https://tile.openstreetmap.org/**", lambda route: route.fulfill(status=204))
     a, b = pages
     suffix = uuid4().hex[:10]
     municipality = "Demo " + suffix
@@ -149,6 +150,8 @@ def run(browser, base, output, transport=None):
         page.locator("#wizard-next").click()
         for name,value in {"seen_at":datetime.now().strftime("%Y-%m-%dT%H:%M"),"municipality":municipality,"neighborhood":"Centro","landmark":"Entrada del parque"}.items():
             form.locator(f'[name="{name}"]').fill(value)
+        page.locator("#missing-map").click(position={"x":180,"y":140})
+        expect(form.locator('[name="latitude"]')).not_to_have_value("")
         page.locator("#wizard-next").click()
         page.locator("#wizard-next").click()
         form.locator('button[type="submit"]').click()
@@ -163,9 +166,10 @@ def run(browser, base, output, transport=None):
     found = b.locator("#found-form")
     for name,value in {"description":"Perro con collar azul junto al parque","seen_at":datetime.now().strftime("%Y-%m-%dT%H:%M"),"municipality":municipality,"neighborhood":"Centro","landmark":"Fuente del parque"}.items():
         found.locator(f'[name="{name}"]').fill(value)
+    b.locator("#found-map").click(position={"x":180,"y":140})
     found.locator('[name="show_phone"]').check()
     found.locator('[name="public_phone"]').fill("5550000000")
-    found.get_by_role("button").click()
+    found.get_by_role("button", name="Publicar hallazgo").click()
     expect(b.locator("#found-success")).to_be_visible()
     found_url = b.locator("#found-link").get_attribute("href")
     b.locator("#filter-form input").fill(municipality)
@@ -185,8 +189,10 @@ def run(browser, base, output, transport=None):
         page = public_context.new_page()
         if transport:
             page.route("**/*", transport)
+        page.route("https://tile.openstreetmap.org/**", lambda route: route.fulfill(status=204))
         page.goto(base + url if url.startswith("/") else url)
         expect(page.locator("#report")).to_be_visible()
+        expect(page.locator("#report-map-section")).to_be_visible()
         page.get_by_role("button", name="Copiar enlace").click()
         expect(page.locator("#status")).to_contain_text(re.compile(r"Enlace copiado\.|Copia este enlace:"))
         if "extravio" in name:
@@ -201,7 +207,7 @@ def run(browser, base, output, transport=None):
     b.get_by_role("button", name="Cerrar sesión").click()
     for selector in ("#pets-list", "#subscriptions", "#inbox"):
         expect(b.locator(selector)).to_be_empty()
-    assert all(urlsplit(url).netloc == urlsplit(base).netloc for url in requests)
+    assert all(urlsplit(url).netloc in {urlsplit(base).netloc, "tile.openstreetmap.org"} for url in requests)
     assert not errors, errors
     for context in contexts:
         context.close()

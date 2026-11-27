@@ -41,7 +41,7 @@ La pestaña **Público** debe ser una pestaña nueva, abierta con `Ctrl+T`. No p
 
 ## 3. Elegir datos de ensayo
 
-Usa un municipio inventado y **escríbelo exactamente igual en todos los formularios**. Ejemplo: `Demo Four Nodes 26 Nov A`. Si repites la demostración, cambia la última letra a `B`, `C`, etc.; así no se mezclan reportes ni alertas de ensayos anteriores.
+Usa **Cuauhtémoc** como alcaldía de ensayo: el mapa inicial muestra esa zona de Ciudad de México. Escríbelo exactamente igual en la suscripción, los reportes y el filtro. Si repites la demostración, crea cuentas de ensayo nuevas para que su bandeja empiece vacía; en la lista pública pueden quedar reportes de prácticas anteriores.
 
 Ejemplo de cuentas ficticias:
 
@@ -63,7 +63,7 @@ Elige una contraseña de al menos 8 caracteres para cada cuenta. Guárdala para 
 
 1. Repite los cuatro pasos anteriores en B, **con otro correo**. No uses la misma cuenta.
 2. En la barra de secciones de `/comunidad`, pulsa **Alertas**. Baja a **Municipios que sigues**.
-3. Escribe `Demo Four Nodes 26 Nov A` y pulsa **Seguir municipio**. Verifica que el municipio aparezca en la lista.
+3. Escribe `Cuauhtémoc` y pulsa **Seguir municipio**. Verifica que el municipio aparezca en la lista.
 4. Haz esto **antes** de publicar el extravío o el hallazgo: la aplicación alerta sobre reportes nuevos, no sobre reportes anteriores a la suscripción.
 5. Deja B abierta en esa sección. La bandeja al principio puede estar vacía.
 
@@ -82,27 +82,27 @@ Ya puedes empezar la exposición. Amy explica el problema en las diapositivas 1�
 
 1. Cambia de la pestaña de diapositivas a **A**. Señala la ficha de Luna en **Mis mascotas**.
 2. Dentro de esa ficha, pulsa **Publicar extravío de esta mascota**. La misma pestaña A abre la página principal y baja al formulario. Verás **Ficha de mascota: Luna**; nombre, especie y características ya están llenos.
-3. Pulsa **Continuar**. En **El último encuentro**, llena **Última vez vista** con una fecha y hora reciente, **Municipio o alcaldía** con `Demo Four Nodes 26 Nov A`, **Colonia** con `Centro` y **Punto de referencia** con `Entrada del parque`.
-4. Pulsa **Continuar**. En **Cómo contactarte**, deja **sin marcar** “Quiero mostrar mi teléfono en el reporte público”. Así podrás demostrar la privacidad.
+3. Pulsa **Continuar**. En **El último encuentro**, llena **Última vez vista** con una fecha y hora reciente, **Municipio o alcaldía** con `Cuauhtémoc`, **Colonia** con `Centro` y **Punto de referencia** con `Entrada del parque`.
+4. Antes de continuar, mueve el mapa y haz clic en el lugar aproximado del extravío. Debe aparecer un punto rojo y un círculo de 3 km. Pulsa **Continuar**. En **Cómo contactarte**, deja **sin marcar** “Quiero mostrar mi teléfono en el reporte público”. Así podrás demostrar la privacidad.
 5. Pulsa **Continuar**, revisa el resumen y pulsa **Publicar y obtener mi enlace**. Debe aparecer **“Tu reporte está publicado”** y un enlace.
 6. Di: **“El reporte ya quedó guardado; las alertas se generan después. El enlace se puede compartir.”** Pulsa **Copiar enlace**.
 
 ### Paso B. Mostrar el enlace sin iniciar sesión
 
 1. Ve a la pestaña **Público**. Pega el enlace en la barra de direcciones y pulsa Enter.
-2. Señala el nombre Luna, las señas y la ubicación. Señala que **no aparece un teléfono**, porque A no autorizó mostrarlo.
+2. Señala el nombre Luna, las señas, el punto rojo y el círculo de 3 km en el mapa. Si no se ven las calles, comprueba la conexión a Internet; las coordenadas siguen guardadas. Señala que **no aparece un teléfono**, porque A no autorizó mostrarlo.
 3. Di: **“Cualquiera que reciba el enlace puede ver el reporte; para publicar o recibir alertas sí hace falta una cuenta.”**
 
 ### Paso C. Publicar un hallazgo desde B
 
 1. Cambia a la pestaña **B**. En la barra de secciones pulsa **Hallazgo**.
-2. En **Encontré una mascota**, llena **Descripción:** `Perro con collar azul junto al parque`; **Fecha y hora del hallazgo:** fecha y hora reciente; **Municipio o alcaldía:** `Demo Four Nodes 26 Nov A`; **Colonia:** `Centro`; **Referencia pública:** `Fuente del parque`.
-3. Deja desmarcada **“Autorizo mostrar mi teléfono en el reporte público”**. Pulsa **Publicar hallazgo**.
+2. En **Encontré una mascota**, llena **Descripción:** `Perro con collar azul junto al parque`; **Fecha y hora del hallazgo:** fecha y hora reciente; **Municipio o alcaldía:** `Cuauhtémoc`; **Colonia:** `Centro`; **Referencia pública:** `Fuente del parque`.
+3. Haz clic en el mapa para marcar el lugar aproximado del hallazgo. Deja desmarcada **“Autorizo mostrar mi teléfono en el reporte público”**. Pulsa **Publicar hallazgo**.
 4. Debe aparecer **“Hallazgo publicado”**. Pulsa **Abrir y compartir reporte** si quieres enseñar su enlace. Regresa a B con el botón Atrás del navegador.
 
 ### Paso D. Buscar los reportes y ver las alertas
 
-1. En B, pulsa **Reportes** en la barra de secciones. En **Municipio o alcaldía (opcional)** escribe `Demo Four Nodes 26 Nov A` y pulsa **Buscar reportes**. Deben aparecer al menos el extravío de Luna y el hallazgo de la demo.
+1. En B, pulsa **Reportes** en la barra de secciones. En **Municipio o alcaldía (opcional)** escribe `Cuauhtémoc` y pulsa **Buscar reportes**. Deben aparecer al menos el extravío de Luna y el hallazgo de la demo.
 2. Pulsa **Alertas** y baja a **Bandeja de alertas**. Pulsa **Actualizar bandeja**. La alerta puede tardar unos segundos, porque se crea después de guardar el reporte. Si no aparece, espera unos 10 segundos y vuelve a pulsar. La página también consulta automáticamente cada 30 segundos mientras está visible.
 3. Abre una alerta para enseñar que lleva a un reporte público. Di: **“La cuenta B seguía este municipio antes de publicar; por eso recibió los avisos. No se enviaron mensajes al teléfono: esta versión usa una bandeja web.”**
 
@@ -116,6 +116,7 @@ En B, pulsa **Cerrar sesión**. Sus municipios y bandeja privados desaparecen de
 |---|---|
 | “Cuenta creada”, pero no aparece “Sesión iniciada” | Vuelve a escribir la contraseña y pulsa **Entrar**. Crear cuenta y entrar son dos acciones distintas. |
 | “El correo ya existe” | Pulsa **Entrar** con esa cuenta o usa otro correo ficticio. |
+| El mapa no muestra calles | Se necesita Internet para cargar las teselas de OpenStreetMap. El punto rojo y las coordenadas siguen funcionando; no vuelvas a publicar por esto. |
 | B no recibe alertas | Comprueba que B pulsó **Seguir municipio** antes del reporte y que el municipio está escrito igual. Espera y pulsa **Actualizar bandeja**. |
 | La ficha Luna no aparece al publicar | Vuelve a A, confirma que dice **Sesión iniciada**, entra a **Mis mascotas** y pulsa **Actualizar mis fichas**. Haz clic en **Publicar extravío de esta mascota** desde la ficha. |
 | El navegador muestra error de conexión | Comprueba `docker compose ps` en la terminal. Espera unos segundos si los servicios acaban de arrancar. |

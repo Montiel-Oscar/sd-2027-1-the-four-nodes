@@ -114,6 +114,34 @@ def test_publication_retry_and_public_link(setup):
         assert event.processed_at is None
 
 
+def test_report_coordinates_are_validated_and_returned(setup):
+    client, factory = setup
+    headers = {"Idempotency-Key": "punto-luna"}
+    data = payload(latitude=19.4326, longitude=-99.1332)
+    response = client.post("/api/reportes/extravios", json=data, headers=headers)
+    assert response.status_code == 201, response.text
+    assert response.json()["latitude"] == 19.4326
+    assert response.json()["longitude"] == -99.1332
+    assert client.get(f'/api/reportes/extravios/{response.json()["id"]}').json()["latitude"] == 19.4326
+    with factory() as session:
+        report = session.get(MissingPetReport, UUID(response.json()["id"]))
+        assert report.longitude == -99.1332
+
+    assert client.post(
+        "/api/reportes/extravios", json=payload(latitude=19.4326),
+        headers={"Idempotency-Key": "punto-incompleto"},
+    ).status_code == 422
+    assert client.post(
+        "/api/reportes/hallazgos",
+        json={
+            "description": "Perro visto", "seen_at": "2026-10-12T18:00:00-06:00",
+            "municipality": "Coyoacán", "neighborhood": "Centro", "landmark": "Parque",
+            "latitude": 91, "longitude": -99.1332,
+        },
+        headers={"Idempotency-Key": "punto-invalido"},
+    ).status_code == 422
+
+
 def test_key_conflict_and_phone_consent(setup):
     client, factory = setup
     headers = {"Idempotency-Key": "intento-luna-2"}

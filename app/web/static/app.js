@@ -33,6 +33,7 @@ if (form) {
       ...(fields.pet_id.value ? {pet_id:fields.pet_id.value} : {pet: {name:fields.name.value,species:fields.species.value,traits:fields.traits.value}}),
       seen_at:new Date(fields.seen_at.value).toISOString(),
       municipality:fields.municipality.value,neighborhood:fields.neighborhood.value,landmark:fields.landmark.value,
+      latitude:Number(fields.latitude.value),longitude:Number(fields.longitude.value),
       show_phone:consent.checked
     };
     if (consent.checked) payload.public_phone = phone.value;
@@ -77,6 +78,7 @@ if (form) {
         document.querySelector("#contact").hidden = false;
       }
       document.querySelector("#report").hidden = false;
+      document.dispatchEvent(new CustomEvent("reportloaded", {detail:data}));
       say("");
     } catch (error) { say(error instanceof TypeError ? "No pudimos cargar el reporte. Comprueba tu conexión y recarga la página." : error.message); }
   })();
@@ -97,6 +99,11 @@ if (form) {
   const captions = ['Conozcamos a tu mascota', 'Su última ubicación', 'Cómo pueden contactarte', 'Todo listo para compartir'];
   let step = 0;
   function validatePanel(index) {
+    if (index === 1 && (!form.elements.latitude.value || !form.elements.longitude.value)) {
+      say("Haz clic en el mapa para marcar el lugar aproximado del extravío.");
+      document.querySelector('#missing-map').focus();
+      return false;
+    }
     for (const field of panels[index].querySelectorAll('input,select,textarea')) {
       if (field.disabled) continue;
       if (field.type !== 'checkbox' && field.type !== 'datetime-local') field.value = field.value.trim();
@@ -132,6 +139,7 @@ if (form) {
     document.querySelector('#step-percent').textContent = percent+'%';
     const caption = document.querySelector('#step-caption');
     caption.textContent = `${step+1} de ${panels.length} · ${captions[step]}`;
+    document.dispatchEvent(new CustomEvent('wizardstep', {detail:step}));
     if (step === panels.length-1) review();
     if (focus) { caption.tabIndex = -1; caption.focus({preventScroll:true}); form.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',block:'start'}); }
   }

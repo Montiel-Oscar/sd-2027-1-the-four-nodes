@@ -40,7 +40,9 @@ Las tres ramas permanentes son `main` (entrega final), `01-monolito` (primera en
 
 ## Versión final distribuida: `main` y `02-separacion`
 
-La aplicación final tiene tres servicios FastAPI: identidad, reportes (dos réplicas) y alertas. Traefik publica únicamente `http://localhost:8000`; PostgreSQL guarda tres bases lógicas en una instancia. El [diagrama de arquitectura](docs/ARQUITECTURA_FINAL.md), el [PRD](docs/PRD.md), los [resultados medidos](docs/RESULTADOS_FINALES.md) y la [rúbrica](RUBRICA.md) documentan la entrega.
+La aplicación final permite marcar en un mapa la ubicación aproximada de extravíos y hallazgos, además de escribir municipio, colonia y referencia. Tiene tres servicios FastAPI: identidad, reportes (dos réplicas) y alertas. Traefik publica únicamente `http://localhost:8000`; PostgreSQL guarda tres bases lógicas en una instancia. El [diagrama de arquitectura](docs/ARQUITECTURA_FINAL.md), el [PRD](docs/PRD.md), los [resultados medidos](docs/RESULTADOS_FINALES.md) y la [rúbrica](RUBRICA.md) documentan la entrega.
+
+El [mapa y su migración](docs/MAPA.md) guardan coordenadas para reportes nuevos y muestran un punto rojo con un círculo de 3 km en el enlace público. Las alertas siguen filtradas por municipio.
 
 ### Arranque sin pasos ocultos
 
@@ -62,7 +64,7 @@ docker compose run --rm --volume "$PWD:/workspace" reportes_a sh -c "pip install
 python3 scripts/resilience_20_subscribers.py --subscribers 20 --trials 3 --timeout 150 --with-faults
 ```
 
-La suite Python pasó **38 pruebas**. El recorrido HTTP, el balanceo con una réplica detenida y la demo real de dos cuentas en Chrome pasaron. En tres ensayos locales de 20 suscriptores, los 20 recibieron una sola alerta por reporte; el máximo observado hasta consultar todas las bandejas fue **10.307 s**. La prueba de caída de `alertas` mantuvo la publicación y entregó la alerta tras reiniciar. Con PostgreSQL detenido, una nueva publicación no se confirmó y el reporte fallido no apareció tras la recuperación. Estos resultados son locales y no garantizan disponibilidad ante caída de la instancia de PostgreSQL.
+La suite Python pasó **39 pruebas**. El recorrido HTTP, el balanceo con una réplica detenida y la demo real de dos cuentas en Chrome pasaron. En tres ensayos locales de 20 suscriptores, los 20 recibieron una sola alerta por reporte; el máximo observado hasta consultar todas las bandejas fue **10.307 s**. La prueba de caída de `alertas` mantuvo la publicación y entregó la alerta tras reiniciar. Con PostgreSQL detenido, una nueva publicación no se confirmó y el reporte fallido no apareció tras la recuperación. Estos resultados son locales y no garantizan disponibilidad ante caída de la instancia de PostgreSQL.
 
 ### Entrega y presentación
 
@@ -76,4 +78,4 @@ La suite Python pasó **38 pruebas**. El recorrido HTTP, el balanceo con una ré
 
 ### Límites
 
-No hay despliegue público, HTTPS, mapa, notificaciones al teléfono ni alta disponibilidad de PostgreSQL. Los tres servicios usan tres bases lógicas dentro de una sola instancia física. La bandeja web se actualiza por consulta periódica y las alertas son eventualmente consistentes.
+El mapa permite marcar un punto aproximado y muestra un radio de 3 km en reportes nuevos. Los reportes anteriores conservan su ubicación escrita sin punto. La cartografía necesita Internet para cargar las teselas de OpenStreetMap; el código de Leaflet se sirve localmente. No hay despliegue público, HTTPS, notificaciones al teléfono ni alta disponibilidad de PostgreSQL. Los tres servicios usan tres bases lógicas dentro de una sola instancia física. La bandeja web se actualiza por consulta periódica y las alertas son eventualmente consistentes.

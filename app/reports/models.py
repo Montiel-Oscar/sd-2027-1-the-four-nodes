@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, UniqueConstraint, Uuid
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -26,6 +26,8 @@ class MissingPetReport(Base):
     municipality: Mapped[str] = mapped_column(String(120), nullable=False)
     neighborhood: Mapped[str] = mapped_column(String(120), nullable=False)
     landmark: Mapped[str] = mapped_column(String(250), nullable=False)
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
     public_phone: Mapped[str | None] = mapped_column(String(32))
     show_phone: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -66,6 +68,8 @@ class FoundPetReport(Base):
     municipality: Mapped[str] = mapped_column(String(120), nullable=False)
     neighborhood: Mapped[str] = mapped_column(String(120), nullable=False)
     landmark: Mapped[str] = mapped_column(String(250), nullable=False)
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
     public_phone: Mapped[str | None] = mapped_column(String(32))
     show_phone: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
