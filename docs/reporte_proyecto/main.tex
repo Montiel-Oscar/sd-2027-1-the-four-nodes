@@ -4,7 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[spanish,mexico]{babel}
 \usepackage{lmodern,graphicx,geometry,fancyhdr,array,booktabs,tabularx,ragged2e,enumitem,setspace,xcolor,tikz,hyperref,float,needspace}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
 \graphicspath{{portada_img/}}
 \input{portada.tex}
 \geometry{left=2.5cm,right=2.5cm,top=3.4cm,bottom=2.6cm,headheight=1.7cm,headsep=0.6cm}
@@ -35,16 +35,17 @@ La primera versión entrega registro e inicio de sesión, fichas propias, edici�
 
 \section{Diagrama funcional}
 \begin{figure}[H]\centering
-\begin{tikzpicture}[node distance=0.8cm and 1.0cm,>=Stealth, box/.style={draw=UNAMRojo,rounded corners,align=center,text width=2.5cm,minimum height=1.2cm,font=\small}]
-\node[box] (a) {Dueño o testigo\ inicia sesión};
-\node[box,right=of a] (b) {Publica extravío\ o hallazgo};
-\node[box,right=of b] (c) {Enlace público\ compartible};
-\node[box,below=of a] (d) {Vecino sigue\ municipio};
-\node[box,right=of d] (e) {Trabajador crea\ alerta posterior};
-\node[box,right=of e] (f) {Bandeja\ del vecino};
+\begin{tikzpicture}[node distance=0.55cm and 0.55cm,>=Stealth,
+box/.style={draw=UNAMRojo,rounded corners,align=center,text width=4.0cm,minimum height=1.45cm,font=\small}]
+\node[box] (a) {Dueño o testigo:\\entra y guarda ficha\\\footnotesize web $\to$ identidad / reportes};
+\node[box,right=of a] (b) {Marca el punto y publica\\\footnotesize web $\to$ reportes\\$\to$ BD + outbox};
+\node[box,right=of b] (c) {Cualquiera abre el enlace\\\footnotesize web $\to$ reportes + mapa};
+\node[box,below=of a] (d) {Vecino: entra y sigue\\municipio\\\footnotesize web $\to$ identidad / alertas};
+\node[box,right=of d] (e) {Se genera la alerta\\después\\\footnotesize trabajador $\to$ feed / ACK $\to$ BD};
+\node[box,right=of e] (f) {Vecino consulta\\la bandeja\\\footnotesize web $\to$ alertas};
 \draw[->] (a)--(b);\draw[->] (b)--(c);\draw[->] (b)--(e);\draw[->] (d)--(e);\draw[->] (e)--(f);
 \end{tikzpicture}
-\caption{Recorridos principales. Las alertas se generan para suscripciones previas al evento.}
+\caption{Acciones de las personas y componentes que intervienen. El hallazgo usa el mismo recorrido de publicación sin ficha previa; sólo reciben alertas las suscripciones anteriores al evento.}
 \end{figure}
 Una ficha puede guardarse sin publicar. Al crear un extravío se elige una ficha propia existente o se crea una nueva junto con el reporte. La descripción y el punto del reporte se conservan como instantánea: editar la ficha después no cambia retroactivamente una publicación. Los enlaces públicos se abren sin sesión; crear fichas, publicar, seguir un municipio y leer la bandeja requieren token.
 
@@ -52,17 +53,19 @@ Al publicar desde la web se marca con un clic el lugar aproximado. El servidor v
 
 \section{Arquitectura y propiedad de datos}
 \begin{figure}[H]\centering
-\begin{tikzpicture}[node distance=0.65cm and 0.8cm,>=Stealth, svc/.style={draw=UNAMRojo,rounded corners,align=center,text width=2.3cm,minimum height=0.95cm,font=\small}, db/.style={draw,ellipse,align=center,text width=2.0cm,minimum height=0.8cm,font=\small}]
+\begin{tikzpicture}[node distance=0.65cm and 0.8cm,>=Stealth, svc/.style={draw=UNAMRojo,rounded corners,align=center,text width=2.3cm,minimum height=0.95cm,font=\small}, db/.style={draw,ellipse,align=center,text width=2.7cm,minimum height=0.8cm,font=\small}]
 \node[svc] (web) {Navegador};\node[svc,right=of web] (gw) {Traefik\\ puerto 8000};
 \node[svc,right=of gw,yshift=1.3cm] (id) {Identidad};
 \node[svc,right=of gw] (rep) {Reportes A/B\\ + mascotas};
 \node[svc,right=of gw,yshift=-1.3cm] (al) {Alertas\\ trabajador};
 \node[db,right=of id] (di) {BD identidad};\node[db,right=of rep] (dr) {BD reportes};\node[db,right=of al] (da) {BD alertas};
+\node[draw,dashed,rounded corners,fit=(di)(dr)(da),inner sep=0.28cm,
+label={[font=\scriptsize]below:Una instancia PostgreSQL con volumen persistente}] (pg) {};
 \draw[->] (web)--(gw);\draw[->] (gw)--(id);\draw[->] (gw)--(rep);\draw[->] (gw)--(al);
 \draw[->] (id)--(di);\draw[->] (rep)--(dr);\draw[->] (al)--(da);
-\draw[->,dashed] (al.west) to[bend left=16] node[below,font=\scriptsize]{feed/ACK interno} (gw.south);
+\draw[->,dashed] (al.south west) to[out=225,in=270] node[below,font=\scriptsize]{feed/ACK interno} (gw.south);
 \end{tikzpicture}
-\caption{Tres servicios, tres bases lógicas y un solo PostgreSQL físico. Traefik balancea entre dos copias de reportes.}
+\caption{Entrada HTTP por Traefik, tres servicios, tres bases lógicas en un PostgreSQL físico y comunicación interna del trabajador con el feed/ACK. Traefik balancea dos copias de reportes.}
 \end{figure}
 Traefik es la única entrada publicada al host. Enruta \texttt{/api/usuarios} a identidad, \texttt{/api/alertas} a alertas, y la web, mascotas y reportes a dos instancias equivalentes de reportes. El feed del outbox sólo se atiende por una entrada interna de Traefik, no publicada al host; exige además un token de servicio. Compose resuelve los contenedores por DNS. Las réplicas no guardan sesiones en memoria y comparten una base lógica y la clave de firma. El token JWT se verifica localmente en reportes y alertas, por lo que publicar con un token vigente no requiere consultar identidad.
 
@@ -70,10 +73,10 @@ PostgreSQL contiene \texttt{four\_nodes} para mascotas, reportes y eventos; \tex
 
 \section{Decisiones de diseño y alternativas}
 \begin{enumerate}[leftmargin=*]
-\item \textbf{Guardar reporte y evento en una transacción local.} Se descartó enviar la alerta dentro de la solicitud HTTP de publicación: habría unido su latencia y disponibilidad a la respuesta del reporte. El outbox permite responder después de confirmar el reporte, aunque alertas esté caído. El trabajador confirma el evento sólo después de guardar las alertas.
+\item \textbf{Guardar reporte y evento en una transacción local.} Se descartó enviar la alerta dentro de la solicitud HTTP de publicación: habría unido su latencia y disponibilidad a la respuesta del reporte. El outbox permite responder después de confirmar el reporte, aunque alertas esté caído. A cambio, dejamos atrás la entrega inmediata: el trabajador confirma el evento sólo después de guardar las alertas y la bandeja puede tardar en actualizarse.
 \item \textbf{JWT verificado localmente.} Se descartó preguntar a identidad en cada petición privada. Una caída de identidad impide registro y login, pero un token vigente puede seguir autorizando publicaciones. El costo es que un token emitido conserva validez hasta su vencimiento (60 minutos), aun si se quisiera revocar antes.
-\item \textbf{Traefik y dos réplicas de reportes.} Se descartó una sola instancia de reportes como entrada final: su caída impediría todas las publicaciones. La comprobación de salud retira una réplica fallida; existe una ventana breve en la que el cliente podría recibir 502. La clave de idempotencia permite reintentar sin crear otro reporte.
-\item \textbf{Una instancia PostgreSQL con tres bases lógicas.} Se descartó mantener usuarios, reportes y alertas en un mismo esquema, pues ocultaría la propiedad de datos. También se descartó desplegar un clúster de bases sin tiempo para operarlo y medirlo. La instancia única es un punto de falla declarado.
+\item \textbf{Traefik y dos réplicas de reportes.} Se descartó una sola instancia de reportes como entrada final: su caída impediría todas las publicaciones. A cambio de tolerar esa caída, operamos un gateway y dos procesos; la comprobación de salud tiene una ventana breve en la que el cliente podría recibir 502. La clave de idempotencia permite reintentar sin crear otro reporte.
+\item \textbf{Una instancia PostgreSQL con tres bases lógicas.} Se descartó mantener usuarios, reportes y alertas en un mismo esquema, pues ocultaría la propiedad de datos. También se descartó desplegar un clúster de bases sin tiempo para operarlo y medirlo. Dejamos atrás la disponibilidad de las escrituras si cae la instancia física: es un punto de falla declarado.
 \end{enumerate}
 
 \section{Manejo de fallas y consistencia eventual}
@@ -82,7 +85,7 @@ La publicación responde \texttt{201} cuando el reporte y su evento quedan confi
 Si una copia de reportes cae, Traefik la detecta y dirige solicitudes a la otra. Durante la detección puede haber un error transitorio y el cliente debe reintentar con la misma \texttt{Idempotency-Key}. Si cae identidad, registro y login dejan de funcionar, pero un JWT vigente puede seguir sirviendo para publicar. Si cae PostgreSQL, no se puede confirmar una nueva publicación; el sistema no ofrece disponibilidad total ante esa falla.
 
 \section{Pruebas y resultados}
-El equipo probó la aplicación con Docker Compose y PostgreSQL. La suite Python contiene 39 pruebas aprobadas tras integrar la edición de mascotas y reparar una mezcla accidental con una versión anterior de autenticación y alertas. Un recorrido HTTP confirmó registro, publicación idempotente, entrega de alerta y bandeja privada. Otra prueba detuvo \texttt{reportes\_a}; el mismo recorrido siguió funcionando con \texttt{reportes\_b}. La interfaz se verificó en Chrome con dos cuentas, fichas separadas y reutilizadas, ambos tipos de reporte con punto en el mapa, enlaces públicos con círculo de 3 km, suscripción, bandeja y vista de 390 px.
+El equipo probó la aplicación con Docker Compose y PostgreSQL. La suite Python contiene 39 pruebas aprobadas. Un recorrido HTTP confirmó registro, publicación idempotente, entrega de alerta y bandeja privada. Otra prueba detuvo \texttt{reportes\_a}; el mismo recorrido siguió funcionando con \texttt{reportes\_b}. La interfaz se verificó en Chrome con dos cuentas, fichas separadas y reutilizadas, ambos tipos de reporte con punto en el mapa, enlaces públicos con círculo de 3 km, suscripción, bandeja y vista de 390 px.
 
 \input{resultados.tex}
 
@@ -96,10 +99,12 @@ python3 scripts/setup_env.py
 docker compose up --build -d
 python3 scripts/smoke_02.py
 python3 scripts/verify_gateway.py
+docker compose run --rm --volume "$PWD:/workspace" \
+  reportes_a sh -c "pip install -q '.[dev]' && pytest -q"
 python3 scripts/resilience_20_subscribers.py \
-  --subscribers 20 --trials 3 --timeout 150
+  --subscribers 20 --trials 3 --timeout 150 --with-faults
 \end{verbatim}
-Abrir \url{http://localhost:8000/} para la interfaz y \url{http://localhost:8000/docs} para la documentación de reportes. Registro, login y alertas funcionan desde el mismo origen. La suite se ejecuta con el comando indicado en el README; \texttt{docker compose down} detiene los servicios sin borrar el volumen. Para reproducir la demo de navegador, seguir \texttt{docs/pitch/GUION\_FINAL.md} y usar dos perfiles independientes.
+Comprobar \url{http://localhost:8000/health/ready}; abrir \url{http://localhost:8000/} para la interfaz y \url{http://localhost:8000/docs} para la API. Crear dos cuentas: la primera guarda una mascota y publica un extravío con punto en el mapa; la segunda sigue el mismo municipio \emph{antes} de la publicación y luego consulta la bandeja. Abrir el enlace público en una pestaña sin sesión para ver el punto y el círculo. El ensayo de resiliencia crea datos de prueba en la base local y detiene/reinicia servicios; ejecutarlo sólo cuando no se esté mostrando la demo. \texttt{docker compose down} detiene los servicios sin borrar el volumen. La guía de clics está en \texttt{docs/pitch/GUIA\_DEMO\_PASO\_A\_PASO.md}; el pitch y sus voces, en \texttt{docs/pitch/GUION\_FINAL.md}.
 
 \section{Límites y qué haríamos distinto}
 El prototipo no tiene despliegue público, HTTPS, cola de mensajes externa, réplica de PostgreSQL ni notificaciones push. Leaflet se sirve localmente, pero las calles del mapa se cargan de OpenStreetMap con Internet; sin conexión, las coordenadas guardadas siguen disponibles. El aviso se consulta en una bandeja web. Un municipio escrito de forma diferente puede no coincidir exactamente con la suscripción. En una siguiente versión priorizaríamos normalizar ubicaciones y evaluar la usabilidad con personas reales; después mediríamos si hace falta un broker o replicación de datos. Esas mejoras no forman parte de la entrega demostrada. El círculo de 3 km es una ayuda visual y no indica que la mascota permanezca dentro de él.
