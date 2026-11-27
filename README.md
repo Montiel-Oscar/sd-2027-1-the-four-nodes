@@ -69,6 +69,7 @@ La suite Python pasó **38 pruebas**. El recorrido HTTP, el balanceo con una ré
 - [Reporte final PDF](docs/reporte-final.pdf), elaborado desde [fuentes LaTeX](docs/reporte_proyecto/main.tex) basadas en el estilo del reporte de referencia.
 - [Diapositivas PDF](docs/pitch/diapositivas.pdf) y [HTML navegable](docs/pitch/diapositivas.html).
 - [Guion de voces y clics de la demo](docs/pitch/GUION_FINAL.md).
+- [Guía paso a paso para abrir y demostrar la app](docs/pitch/GUIA_DEMO_PASO_A_PASO.md).
 - [Resultados y fallas](docs/RESULTADOS_FINALES.md).
 
 **Equipo:** Oscar Iván Montiel Juárez, Luisa María Segura Cedeño, Cecilia Ximena Solís Cisneros y Amy Valentina Veraza García. La entrega del curso es el **28 de noviembre de 2026 antes de las 07:00**, hora de Ciudad de México.
