@@ -76,6 +76,7 @@ class MissingPetPublic(BaseModel):
     latitude: float | None
     longitude: float | None
     public_phone: str | None
+    photo_url: str | None = None
     created_at: datetime
 
 
@@ -132,6 +133,7 @@ class FoundPetPublic(BaseModel):
     latitude: float | None
     longitude: float | None
     public_phone: str | None
+    photo_url: str | None = None
     created_at: datetime
 
 

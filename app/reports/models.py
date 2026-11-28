@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, Text, UniqueConstraint, Uuid
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, LargeBinary, String, Text, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -123,3 +123,15 @@ class ReportMessage(Base):
     sender_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
+class ReportPhoto(Base):
+    """Una fotografía JPEG por reporte, compartida por ambas réplicas en PostgreSQL."""
+
+    __tablename__ = "report_photos"
+    __table_args__ = (UniqueConstraint("report_kind", "report_id", name="uq_report_photo"),)
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    report_kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    report_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    jpeg_data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)

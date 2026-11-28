@@ -58,7 +58,10 @@
   }
 
   const missing = picker("missing-map", "publish-form", "locate-missing", "missing-map-status");
-  picker("found-map", "found-form", "locate-found", "found-map-status");
+  const found = picker("found-map", "found-form", "locate-found", "found-map-status");
+  document.addEventListener("communitysectionchange", () => {
+    if (found) setTimeout(() => found.invalidateSize(), 0);
+  });
   document.addEventListener("wizardstep", event => {
     if (missing && event.detail === 1) setTimeout(() => missing.invalidateSize(), 0);
   });

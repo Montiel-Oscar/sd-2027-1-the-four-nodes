@@ -29,9 +29,9 @@ La primera versión tendrá cinco funciones:
 
 Los reportes públicos se podrán filtrar por municipio. La zona se expresará con municipio, colonia y una referencia textual visible, por ejemplo un cruce de calles o un lugar público. Además, el navegador permite marcar con un clic un punto aproximado; el enlace público centra un mapa en ese punto y muestra un círculo de 3 km. Las coordenadas se guardan en el reporte, no representan seguimiento en vivo. El formulario pedirá no señalar un domicilio particular. Quien publica podrá añadir voluntariamente un teléfono de contacto público; si lo omite, otra persona con cuenta podrá escribirle desde el reporte. Ambas consultan y responden desde una bandeja privada. El hallazgo público sigue siendo una opción adicional.
 
-El registro e inicio de sesión con correo y contraseña son funciones de apoyo para publicar y suscribirse; se mantienen deliberadamente básicos. Antes de publicar un teléfono, el formulario pide consentimiento explícito para mostrarlo.
+La interfaz ofrece navegación separada por acción y admite una foto JPG opcional por reporte (máximo 3 MB). El registro e inicio de sesión con correo y contraseña son funciones de apoyo para publicar y suscribirse; se mantienen deliberadamente básicos. Antes de publicar un teléfono, el formulario pide consentimiento explícito para mostrarlo.
 
-La versión se demostrará localmente con Docker Compose. Quedan fuera: rastreo GPS continuo, localizadores o chips, reconocimiento por foto, carga de imágenes, foro público, vinculación automática de hallazgos, correo, notificaciones push, recuperación de contraseña y despliegue público. Una interfaz web sencilla, adaptable a teléfono, basta para demostrar los flujos.
+La versión se demostrará localmente con Docker Compose. Quedan fuera: rastreo GPS continuo, localizadores o chips, reconocimiento automático por foto, foro público, vinculación automática de hallazgos, correo, notificaciones push, recuperación de contraseña y despliegue público. Una interfaz web sencilla, adaptable a teléfono, basta para demostrar los flujos.
 
 ## 4. El requisito que perseguimos y lo que dejamos atrás
 

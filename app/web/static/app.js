@@ -26,7 +26,7 @@ if (form) {
   form.addEventListener("submit", async event => {
     event.preventDefault();
     for (const field of form.querySelectorAll("input:not([type=checkbox]),textarea")) {
-      if (!field.disabled && field.type !== "datetime-local") field.value = field.value.trim();
+      if (!field.disabled && field.type !== "datetime-local" && field.type !== "file") field.value = field.value.trim();
     }
     if (!form.reportValidity()) return;
     const fields = form.elements;
@@ -47,11 +47,14 @@ if (form) {
       const data = await readResponse(await fetch("/api/reportes/extravios", {method:"POST",headers:{"Content-Type":"application/json","Idempotency-Key":attempt.key,...window.FourNodes.authHeaders()},body:attempt.body}));
       if (!data.id) throw new Error("La respuesta no incluye el identificador del reporte. Intenta de nuevo.");
       shareUrl = new URL(`/reportes/extravios/${encodeURIComponent(data.id)}`, location.origin).href;
+      let photoWarning = "";
+      try { await window.FourNodes.uploadPhoto("extravios", data.id, fields.photo.files[0]); }
+      catch (error) { photoWarning = ` El reporte quedó publicado, pero la foto no se guardó: ${error.message}`; }
       const link = document.querySelector("#public-link");
       link.href = shareUrl; link.textContent = shareUrl;
       document.querySelector("#success").hidden = false;
       form.hidden = true;
-      say("");
+      say(photoWarning);
       link.focus();
     } catch (error) {
       say(error instanceof TypeError ? "No pudimos conectar. Reintenta con los mismos datos; conservaremos la clave para evitar duplicados." : error.message);
@@ -69,6 +72,11 @@ if (form) {
       document.title = data.pet ? `${data.pet.name} · Reporte de extravío` : "Hallazgo · The Four Nodes";
       document.querySelector("#pet-species").textContent = data.pet?.species || "Hallazgo";
       document.querySelector("#pet-traits").textContent = data.pet?.traits || data.description;
+      const photo = document.querySelector("#report-photo");
+      if (data.photo_url) {
+        photo.src = data.photo_url;
+        photo.alt = "Fotografía del reporte";
+      } else photo.src = data.pet?.species === "gato" ? "/web/silhouette-cat.svg" : data.pet?.species === "perro" ? "/web/silhouette-dog.svg" : "/web/silhouette-paw.svg";
       const locationList = document.querySelector("#location");
       for (const [label,value] of [["Fecha y hora",new Date(data.seen_at).toLocaleString("es-MX",{dateStyle:"long",timeStyle:"short"})],["Municipio o alcaldía",data.municipality],["Colonia",data.neighborhood],["Referencia",data.landmark]]) {
         const term = document.createElement("dt"); term.textContent = label;
@@ -91,6 +99,11 @@ document.querySelector("#contact-form")?.addEventListener("submit", async event 
   const message = contactForm.elements.body.value.trim();
   const result = document.querySelector("#contact-status");
   if (!message || !reportInfo) return;
+  if (!window.FourNodes.token()) {
+    sessionStorage.setItem(`four-nodes-contact-draft:${location.pathname}`, message);
+    location.assign(window.FourNodes.loginUrl(location.pathname));
+    return;
+  }
   const button = contactForm.querySelector("button[type=submit]");
   button.disabled = true;
   result.textContent = "Enviando…";
@@ -104,6 +117,17 @@ document.querySelector("#contact-form")?.addEventListener("submit", async event 
     result.textContent = error instanceof TypeError ? "No pudimos conectar. Conservamos tu mensaje; vuelve a intentar." : error.message;
   } finally { button.disabled = false; }
 });
+const contactForm = document.querySelector("#contact-form");
+if (contactForm) {
+  const draftKey = `four-nodes-contact-draft:${location.pathname}`;
+  const draft = sessionStorage.getItem(draftKey);
+  if (draft) { contactForm.elements.body.value = draft; sessionStorage.removeItem(draftKey); }
+  document.querySelector("#contact-signin").href = window.FourNodes.loginUrl(location.pathname);
+  const signInPrompt = document.querySelector(".contact-signin");
+  const showSignInPrompt = () => { signInPrompt.hidden = Boolean(window.FourNodes.token()); };
+  window.addEventListener("sessionchange", showSignInPrompt);
+  showSignInPrompt();
+}
 document.querySelector("#copy-link")?.addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(shareUrl); say("Enlace copiado."); }
   catch { say(`Copia este enlace: ${shareUrl}`); }
@@ -127,7 +151,7 @@ if (form) {
     }
     for (const field of panels[index].querySelectorAll('input,select,textarea')) {
       if (field.disabled) continue;
-      if (field.type !== 'checkbox' && field.type !== 'datetime-local') field.value = field.value.trim();
+      if (field.type !== 'checkbox' && field.type !== 'datetime-local' && field.type !== 'file') field.value = field.value.trim();
       if (!field.reportValidity()) return false;
     }
     return true;

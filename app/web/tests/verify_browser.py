@@ -70,10 +70,10 @@ def main():
                 data = {"description": "<img src=x onerror=alert(1)>", "municipality": "Coyoacán", "neighborhood": "Centro", "landmark": "Parque", "seen_at": "2026-11-12T12:00:00Z", "public_phone": None}
             route.fulfill(status=status, json=data, headers=headers)
             return
-        file = "community.html" if path == "/comunidad" else "index.html" if path == "/" else "report.html" if path.startswith("/reportes/") else path.removeprefix("/web/")
+        file = "community.html" if path == "/comunidad" else "account.html" if path == "/cuenta" else "index.html" if path == "/" else "report.html" if path.startswith("/reportes/") else path.removeprefix("/web/")
         target = STATIC / file
         if target.is_file():
-            mime = "text/javascript" if target.suffix == ".js" else "text/css" if target.suffix == ".css" else "image/jpeg" if target.suffix == ".jpg" else "text/html"
+            mime = "text/javascript" if target.suffix == ".js" else "text/css" if target.suffix == ".css" else "image/jpeg" if target.suffix == ".jpg" else "image/svg+xml" if target.suffix == ".svg" else "text/html"
             route.fulfill(body=target.read_bytes(), content_type=mime)
         else:
             route.fulfill(status=404)
@@ -87,19 +87,21 @@ def main():
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.clock.install()
         page.route("**/*", serve)
-        page.goto("http://localhost:8000/comunidad")
+        page.goto("http://localhost:8000/cuenta?next=%2Fcomunidad%23alerts")
         for width in (390, 768, 1440):
             page.set_viewport_size({"width": width, "height": 1000})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
+        page.get_by_role("tab", name="Crear cuenta").click()
         page.locator('[name="email"]').fill("amy@example.org")
         page.locator('[name="password"]').fill("test-password")
         page.get_by_role("button", name="Crear cuenta", exact=True).click()
         expect(page.locator("#account-status")).to_contain_text("Cuenta creada")
         page.locator('[name="password"]').fill("test-password")
-        page.get_by_role("button", name="Entrar", exact=True).click()
-        expect(page.locator("#session-state")).to_have_text("Sesión iniciada")
+        page.get_by_role("button", name="Iniciar sesión", exact=True).click()
+        expect(page.locator("#session-state")).to_contain_text("Sesión activa")
         expect(page.locator("#inbox a")).to_have_attribute("href", f"/reportes/hallazgos/{REPORT_ID}")
         assert page.evaluate("localStorage.length") == 0
+        page.goto("http://localhost:8000/comunidad#pets")
         pet_form = page.locator("#pet-form")
         pet_form.locator('[name="name"]').fill("Luna")
         pet_form.locator('[name="species"]').select_option("perro")
@@ -107,6 +109,7 @@ def main():
         pet_form.get_by_role("button").click()
         expect(page.locator("#pets-list h3")).to_have_text("Luna")
         assert not any(call[1] == "POST" and "/reportes/" in call[0] for call in calls)
+        page.goto("http://localhost:8000/comunidad#found")
         form = page.locator("#found-form")
         for name, value in {"description":"Perro con collar rojo", "seen_at":"2026-11-12T10:30", "municipality":"Coyoacán", "neighborhood":"Centro", "landmark":"Parque"}.items():
             form.locator(f'[name="{name}"]').fill(value)
@@ -129,6 +132,7 @@ def main():
         next_error = 409
         form.get_by_role("button", name="Publicar hallazgo").click()
         expect(page.locator("#found-status")).to_contain_text("Conflicto")
+        page.goto("http://localhost:8000/comunidad#alerts")
         page.locator("#subscription-form input").fill("Coyoacán")
         page.locator("#subscription-form button").click()
         expect(page.locator("#subscriptions-status")).to_contain_text("reportes nuevos")
@@ -136,7 +140,7 @@ def main():
         before = inbox_calls
         page.clock.fast_forward(31000)
         expect(page.locator("#inbox-status")).to_have_text("Bandeja actualizada.")
-        expect(page).to_have_url("http://localhost:8000/comunidad")
+        expect(page).to_have_url("http://localhost:8000/comunidad#alerts")
         time.sleep(0.2)
         page.evaluate("0")
         assert inbox_calls > before
@@ -149,12 +153,11 @@ def main():
         expect(page.locator("#contact")).to_be_hidden()
         expect(page.locator("#report-map-unavailable")).to_be_visible()
         assert page.locator("#pet-traits img").count() == 0
-        page.goto("http://localhost:8000/")
-        page.locator(".inline-account summary").click()
+        page.goto("http://localhost:8000/cuenta?next=%2F")
         page.locator('#account-form [name="email"]').fill("amy@example.org")
         page.locator('#account-form [name="password"]').fill("test-password")
-        page.locator('#account-form button[value="login"]').click()
-        expect(page.locator("#session-state")).to_have_text("Sesión iniciada")
+        page.get_by_role("button", name="Iniciar sesión", exact=True).click()
+        expect(page.locator("#session-state")).to_contain_text("Sesión activa")
         form = page.locator("#publish-form")
         form.locator('[name="name"]').fill("Luna")
         form.locator('[name="species"]').select_option("perro")
@@ -189,15 +192,12 @@ def main():
         existing = [call for call in calls if call[0].endswith("/extravios") and call[1] == "POST"][-1]
         assert json.loads(existing[3])["pet_id"] == REPORT_ID
         assert "pet" not in json.loads(existing[3])
-        page.goto("http://localhost:8000/comunidad")
+        page.goto("http://localhost:8000/comunidad#pets")
         expect(page.locator("#pets-list h3")).to_have_text("Luna")
         next_error = 401
         page.locator("#refresh-pets").click()
-        expect(page.locator("#session-state")).to_contain_text("Inicia sesión")
+        expect(page.locator("#session-state")).to_contain_text("Aún no has iniciado sesión")
         expect(page.locator("#pets-list")).to_be_empty()
-        page.get_by_role("link", name="Cuenta", exact=True).focus()
-        page.keyboard.press("Tab")
-        assert page.evaluate("document.activeElement.textContent") == "Mis mascotas"
         assert not errors, errors
         browser.close()
     print("OK: registro, JWT, hallazgo y extravío con reintentos, consentimiento, suscripción, polling, cierre de sesión, reporte público y 3 anchos.")

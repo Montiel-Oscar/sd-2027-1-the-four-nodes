@@ -6,11 +6,15 @@ Ensayos locales con Docker Compose, una instancia PostgreSQL con tres bases lóg
 
 ## Funcionalidad y autorización
 
-`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **40 pruebas**. La prueba de navegador con dos cuentas confirmó que se puede marcar un punto en extravío y hallazgo y que los enlaces públicos muestran el mapa. Las coordenadas de reportes anteriores son opcionales y siguen disponibles sus ubicaciones escritas. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
+`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **41 pruebas**. La prueba de navegador con dos cuentas confirmó que se puede marcar un punto en extravío y hallazgo y que los enlaces públicos muestran el mapa. Las coordenadas de reportes anteriores son opcionales y siguen disponibles sus ubicaciones escritas. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
 
 ## Contacto privado sin teléfono
 
 Una persona autenticada puede escribir desde el enlace público de un reporte; el autor ve la conversación en **Comunidad → Mensajes** y puede responder. La conversación y sus mensajes se guardan en la base de reportes. Sólo el autor y quien inició el contacto pueden leer o escribir en ella. `scripts/smoke_contact.py` confirmó envío, respuesta, ausencia de teléfono y rechazo a una tercera cuenta a través de Traefik. La interfaz se comprobó en el navegador con registro, envío y lectura. Los mensajes se consultan cada 30 segundos mientras la página está visible; no hay notificación fuera de la aplicación.
+
+## Interfaz y fotografía opcional
+
+El registro usa una pantalla separada y regresa al inicio de sesión tras crear la cuenta. Al entrar, la persona vuelve a la sección desde la que llegó y ve una indicación de sesión activa. La comunidad presenta una sección por vez y accesos directos a fichas, extravíos, hallazgos, reportes, mensajes y alertas. Un ensayo HTTP a través de Traefik confirmó que una foto JPG se guarda y puede leerse tras varias solicitudes, con ambas réplicas de reportes activas. La prueba automatizada también verifica tipo, tamaño y autorización para reemplazarla. Las siluetas se usan cuando no hay foto. Esta prueba no mide rendimiento de imágenes bajo carga.
 
 ## Entrega con 20 suscriptores
 

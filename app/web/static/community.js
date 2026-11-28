@@ -16,7 +16,7 @@ function wireForm(selector, statusId, handler) {
   form.addEventListener("submit", async event => {
     event.preventDefault();
     for (const field of form.querySelectorAll("input,textarea")) {
-      if (!["password","datetime-local","checkbox"].includes(field.type)) field.value = field.value.trim();
+      if (!["password","datetime-local","checkbox","file"].includes(field.type)) field.value = field.value.trim();
     }
     if (!form.reportValidity()) return;
     const buttons = [...form.querySelectorAll("button")];
@@ -44,7 +44,15 @@ async function browse(municipality = "") {
     const {kind, reports} = result.value;
     for (const report of reports) {
       const card = document.createElement("article");
-      card.append(node("p", kind === "extravios" ? "Extravío" : "Hallazgo"), reportLink(kind, report.id, report.pet?.name || report.description), node("p", `${report.municipality} · ${report.neighborhood}`), node("p", new Date(report.seen_at).toLocaleString("es-MX")));
+      card.className = "report-card";
+      const preview = document.createElement("div");
+      preview.className = "report-preview";
+      const image = document.createElement("img");
+      image.src = report.photo_url || (report.pet?.species === "gato" ? "/web/silhouette-cat.svg" : report.pet?.species === "perro" ? "/web/silhouette-dog.svg" : "/web/silhouette-paw.svg");
+      image.alt = report.photo_url ? "Foto del reporte" : "Silueta de mascota; foto aún no disponible";
+      image.loading = "lazy";
+      preview.append(image);
+      card.append(node("p", kind === "extravios" ? "Extravío" : "Hallazgo"), reportLink(kind, report.id, report.pet?.name || report.description), node("p", `${report.municipality} · ${report.neighborhood}`), node("p", new Date(report.seen_at).toLocaleString("es-MX")), preview);
       $("#reports-list").append(card);
       count++;
     }
@@ -69,9 +77,12 @@ wireForm("#found-form", "#found-status", async form => {
   // La API limita la clave por usuario; renovar el token no cambia el intento.
   if (!attempt || attempt.body !== body) attempt = {body, key:crypto.randomUUID()};
   const report = await api.request("/api/reportes/hallazgos", {private:true, method:"POST", headers:{"Idempotency-Key":attempt.key}, body:attempt.body});
+  let photoWarning = "";
+  try { await api.uploadPhoto("hallazgos", report.id, f.photo.files[0]); }
+  catch (error) { photoWarning = ` El reporte quedó publicado, pero la foto no se guardó: ${error.message}`; }
   $("#found-link").href = `/reportes/hallazgos/${encodeURIComponent(report.id)}`;
   $("#found-success").hidden = false;
-  status("#found-status", "Hallazgo publicado. Comparte su enlace.");
+  status("#found-status", `Hallazgo publicado. Comparte su enlace.${photoWarning}`);
   $("#found-link").focus();
 });
 
@@ -196,3 +207,18 @@ setInterval(inbox, 30000);
 setInterval(() => { if (!document.hidden) conversations(); }, 30000);
 sessionChanged();
 browse();
+function showCommunitySection() {
+  const section = location.hash.slice(1);
+  const valid = ["overview", "pets", "browse", "found", "alerts", "messages"];
+  const current = valid.includes(section) ? section : "overview";
+  for (const panel of document.querySelectorAll(".community main > section")) panel.hidden = panel.id !== current;
+  for (const link of document.querySelectorAll('.community .site-bar a[href^="#"]')) {
+    link.classList.toggle("active", link.getAttribute("href") === `#${current}`);
+  }
+  const accountLink = document.querySelector(".community [data-login-link]");
+  if (accountLink) accountLink.href = api.loginUrl(location.pathname + location.hash);
+  if (current === "found") document.dispatchEvent(new Event("communitysectionchange"));
+  if (current === "messages") conversations();
+}
+window.addEventListener("hashchange", showCommunitySection);
+showCommunitySection();

@@ -1,6 +1,9 @@
 """Pruebas del contrato de Oscar sin esperar la rama de mascotas de Luisa."""
 
 from uuid import UUID, uuid4
+from io import BytesIO
+
+from PIL import Image
 
 import pytest
 from fastapi import FastAPI, HTTPException
@@ -12,7 +15,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.auth import get_actor_id
 from app.core.db import Base, get_session
 from app.reports import service
-from app.reports.models import FoundPetReport, MissingPetReport, OutboxEventV1, PendingReportEvent, ReportConversation, ReportMessage
+from app.reports.models import FoundPetReport, MissingPetReport, OutboxEventV1, PendingReportEvent, ReportConversation, ReportMessage, ReportPhoto
 from app.reports.router import router
 from app.web.router import router as web_router
 
@@ -44,6 +47,7 @@ def setup(monkeypatch):
             OutboxEventV1.__table__,
             ReportConversation.__table__,
             ReportMessage.__table__,
+            ReportPhoto.__table__,
         ],
     )
     factory = sessionmaker(engine)
@@ -375,3 +379,34 @@ def test_private_conversation_between_reporter_and_finder(setup):
 
     client.app.dependency_overrides[get_actor_id] = lambda: finder
     assert client.get(messages_url).json()[-1]["sender_is_me"] is False
+
+
+def test_report_photo_is_jpg_owned_and_public(setup):
+    client, factory = setup
+    created = client.post(
+        "/api/reportes/extravios", json=payload(),
+        headers={"Idempotency-Key": "foto-luna"},
+    ).json()
+    report_id = created["id"]
+    path = f"/api/reportes/extravios/{report_id}/foto"
+    assert created["photo_url"] is None
+    image = Image.new("RGB", (40, 30), "#7cb69b")
+    data = BytesIO()
+    image.save(data, format="JPEG")
+    jpg = data.getvalue()
+    uploaded = client.put(path, content=jpg, headers={"Content-Type": "image/jpeg"})
+    assert uploaded.status_code == 204, uploaded.text
+    assert client.get(f"/api/reportes/extravios/{report_id}").json()["photo_url"] == path
+    shown = client.get(path)
+    assert shown.status_code == 200
+    assert shown.headers["content-type"].startswith("image/jpeg")
+    assert Image.open(BytesIO(shown.content)).size == (40, 30)
+    assert client.put(path, content=b"not a jpg", headers={"Content-Type":"image/jpeg"}).status_code == 422
+    assert client.put(path, content=jpg, headers={"Content-Type":"image/png"}).status_code == 415
+    assert client.put(path, content=b"x" * 3_000_001, headers={"Content-Type":"image/jpeg"}).status_code == 413
+    with factory() as session:
+        assert session.scalar(select(func.count()).select_from(ReportPhoto)) == 1
+    # Otra cuenta no puede reemplazar la foto, aunque cualquiera puede ver el reporte.
+    client.app.dependency_overrides[get_actor_id] = lambda: uuid4()
+    assert client.put(path, content=jpg, headers={"Content-Type":"image/jpeg"}).status_code == 404
+    assert client.get(path).status_code == 200

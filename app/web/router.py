@@ -13,6 +13,11 @@ def home():
     return FileResponse(STATIC / "index.html")
 
 
+@router.get("/cuenta", response_class=FileResponse)
+def account():
+    return FileResponse(STATIC / "account.html")
+
+
 @router.get("/reportes/extravios/{report_id}", response_class=FileResponse)
 def public_report(report_id: UUID):
     return FileResponse(STATIC / "report.html")
@@ -34,6 +39,14 @@ def photo(filename: str):
     if filename not in {"golden.jpg", "dog.jpg"}:
         raise HTTPException(status_code=404, detail="Fotografia no encontrada")
     return FileResponse(STATIC / "photos" / filename, media_type="image/jpeg")
+
+
+@router.get("/web/{filename}.svg", include_in_schema=False)
+def silhouette(filename: str):
+    from fastapi import HTTPException
+    if filename not in {"silhouette-dog", "silhouette-cat", "silhouette-paw"}:
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+    return FileResponse(STATIC / f"{filename}.svg", media_type="image/svg+xml")
 
 
 @router.get("/comunidad", response_class=FileResponse)
