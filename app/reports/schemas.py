@@ -146,3 +146,31 @@ class InternalEvent(BaseModel):
 
 class InternalEventBatch(BaseModel):
     events: list[InternalEvent]
+
+
+class MessageInput(BaseModel):
+    body: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("body")
+    @classmethod
+    def nonempty_body(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("El mensaje no puede estar vacío")
+        return value
+
+
+class ConversationPublic(BaseModel):
+    id: UUID
+    report_kind: str
+    report_id: UUID
+    report_title: str
+    role: str
+    last_message_at: datetime
+
+
+class MessagePublic(BaseModel):
+    id: UUID
+    body: str
+    sender_is_me: bool
+    created_at: datetime

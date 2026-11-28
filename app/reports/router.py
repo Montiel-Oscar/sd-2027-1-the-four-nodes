@@ -1,5 +1,6 @@
 """API pública de reportes y feed interno para el proceso de alertas."""
 
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, Request, status
@@ -8,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_actor_id
 from app.core.db import get_session
 from app.reports.events import acknowledge_event, pending_events, require_internal_token
+from app.reports.conversations import list_conversations, list_messages, send_message, start_conversation
 from app.reports.models import FoundPetReport, MissingPetReport
 from app.reports.schemas import (
     FoundPetInput,
@@ -15,6 +17,9 @@ from app.reports.schemas import (
     InternalEventBatch,
     MissingPetInput,
     MissingPetPublic,
+    MessageInput,
+    MessagePublic,
+    ConversationPublic,
     PetDetails,
 )
 from app.reports.service import (
@@ -121,6 +126,37 @@ def list_found_reports(
     session: Session = Depends(get_session),
 ) -> list[FoundPetPublic]:
     return [_public_found(report, request) for report in list_found_pets(session, municipality)]
+
+
+@router.post("/{kind}/{report_id}/conversaciones", response_model=ConversationPublic, status_code=201)
+def contact_report_owner(
+    kind: Literal["extravios", "hallazgos"], report_id: UUID, data: MessageInput,
+    actor_id: UUID = Depends(get_actor_id), session: Session = Depends(get_session),
+) -> ConversationPublic:
+    return start_conversation(session, kind, report_id, actor_id, data.body)
+
+
+@router.get("/conversaciones", response_model=list[ConversationPublic])
+def my_conversations(
+    actor_id: UUID = Depends(get_actor_id), session: Session = Depends(get_session),
+) -> list[ConversationPublic]:
+    return list_conversations(session, actor_id)
+
+
+@router.get("/conversaciones/{conversation_id}/mensajes", response_model=list[MessagePublic])
+def conversation_messages(
+    conversation_id: UUID, actor_id: UUID = Depends(get_actor_id),
+    session: Session = Depends(get_session),
+) -> list[MessagePublic]:
+    return list_messages(session, conversation_id, actor_id)
+
+
+@router.post("/conversaciones/{conversation_id}/mensajes", response_model=MessagePublic, status_code=201)
+def reply_to_conversation(
+    conversation_id: UUID, data: MessageInput, actor_id: UUID = Depends(get_actor_id),
+    session: Session = Depends(get_session),
+) -> MessagePublic:
+    return send_message(session, conversation_id, actor_id, data.body)
 
 
 @router.get(

@@ -6,7 +6,11 @@ Ensayos locales con Docker Compose, una instancia PostgreSQL con tres bases lóg
 
 ## Funcionalidad y autorización
 
-`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **39 pruebas**. La prueba de navegador con dos cuentas confirmó que se puede marcar un punto en extravío y hallazgo y que los enlaces públicos muestran el mapa. Las coordenadas de reportes anteriores son opcionales y siguen disponibles sus ubicaciones escritas. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
+`PUT /api/mascotas/{pet_id}` permite editar nombre, especie y rasgos solo al dueño; otro usuario recibe 404. El reporte publicado guarda una instantánea descriptiva, por lo que la edición posterior de la ficha no modifica el enlace ya compartido. La suite Python pasó **40 pruebas**. La prueba de navegador con dos cuentas confirmó que se puede marcar un punto en extravío y hallazgo y que los enlaces públicos muestran el mapa. Las coordenadas de reportes anteriores son opcionales y siguen disponibles sus ubicaciones escritas. La ruta de identidad ya vive en el proceso `identidad` y su propia base lógica; `reportes_a`, `reportes_b` y `alertas` verifican JWT localmente.
+
+## Contacto privado sin teléfono
+
+Una persona autenticada puede escribir desde el enlace público de un reporte; el autor ve la conversación en **Comunidad → Mensajes** y puede responder. La conversación y sus mensajes se guardan en la base de reportes. Sólo el autor y quien inició el contacto pueden leer o escribir en ella. `scripts/smoke_contact.py` confirmó envío, respuesta, ausencia de teléfono y rechazo a una tercera cuenta a través de Traefik. La interfaz se comprobó en el navegador con registro, envío y lectura. Los mensajes se consultan cada 30 segundos mientras la página está visible; no hay notificación fuera de la aplicación.
 
 ## Entrega con 20 suscriptores
 

@@ -30,6 +30,7 @@ def init_db() -> None:
     from app.pets.models import Pet
     from app.reports.models import (
         FoundPetReport, MissingPetReport, OutboxEventV1, PendingReportEvent,
+        ReportConversation, ReportMessage,
     )
 
     Base.metadata.create_all(
@@ -37,6 +38,7 @@ def init_db() -> None:
         tables=[
             Pet.__table__, MissingPetReport.__table__, PendingReportEvent.__table__,
             FoundPetReport.__table__, OutboxEventV1.__table__,
+            ReportConversation.__table__, ReportMessage.__table__,
         ],
     )
     # create_all no agrega columnas a un volumen que ya contiene reportes.

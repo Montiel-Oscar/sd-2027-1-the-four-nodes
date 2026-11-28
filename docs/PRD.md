@@ -19,18 +19,19 @@ El alcance por internet, por sí solo, no exige microservicios. Esta partición 
 
 ## 3. Objetivos y lo que no vamos a hacer
 
-La primera versión tendrá cuatro funciones:
+La primera versión tendrá cinco funciones:
 
 1. **Registrar mascotas:** guardar una ficha breve para reutilizarla. También se podrá crear la ficha al publicar un extravío.
 2. **Publicar extravíos:** registrar descripción, fecha y zona de la última vez que se vio a la mascota; generar una página pública con enlace compartible.
 3. **Registrar hallazgos:** publicar una descripción y la zona del avistamiento sin tener que relacionarlo con un extravío concreto.
 4. **Recibir alertas:** seguir un municipio y consultar en una bandeja web los nuevos extravíos y hallazgos de esa zona.
+5. **Contactar sin teléfono público:** iniciar una conversación privada desde un reporte y responder en la sección de mensajes.
 
-Los reportes públicos se podrán filtrar por municipio. La zona se expresará con municipio, colonia y una referencia textual visible, por ejemplo un cruce de calles o un lugar público. Además, el navegador permite marcar con un clic un punto aproximado; el enlace público centra un mapa en ese punto y muestra un círculo de 3 km. Las coordenadas se guardan en el reporte, no representan seguimiento en vivo. El formulario pedirá no señalar un domicilio particular. Quien publica podrá añadir voluntariamente un teléfono de contacto público; si lo omite, la otra persona aún podrá publicar un hallazgo que el dueño verá en la bandeja si sigue ese municipio.
+Los reportes públicos se podrán filtrar por municipio. La zona se expresará con municipio, colonia y una referencia textual visible, por ejemplo un cruce de calles o un lugar público. Además, el navegador permite marcar con un clic un punto aproximado; el enlace público centra un mapa en ese punto y muestra un círculo de 3 km. Las coordenadas se guardan en el reporte, no representan seguimiento en vivo. El formulario pedirá no señalar un domicilio particular. Quien publica podrá añadir voluntariamente un teléfono de contacto público; si lo omite, otra persona con cuenta podrá escribirle desde el reporte. Ambas consultan y responden desde una bandeja privada. El hallazgo público sigue siendo una opción adicional.
 
 El registro e inicio de sesión con correo y contraseña son funciones de apoyo para publicar y suscribirse; se mantienen deliberadamente básicos. Antes de publicar un teléfono, el formulario pide consentimiento explícito para mostrarlo.
 
-La versión se demostrará localmente con Docker Compose. Quedan fuera: rastreo GPS continuo, localizadores o chips, reconocimiento por foto, carga de imágenes, chat, vinculación automática de hallazgos, correo, notificaciones push, recuperación de contraseña y despliegue público. Una interfaz web sencilla, adaptable a teléfono, basta para demostrar los flujos.
+La versión se demostrará localmente con Docker Compose. Quedan fuera: rastreo GPS continuo, localizadores o chips, reconocimiento por foto, carga de imágenes, foro público, vinculación automática de hallazgos, correo, notificaciones push, recuperación de contraseña y despliegue público. Una interfaz web sencilla, adaptable a teléfono, basta para demostrar los flujos.
 
 ## 4. El requisito que perseguimos y lo que dejamos atrás
 
@@ -72,6 +73,15 @@ Si alertas falla, se acepta superar los 3 minutos: el evento pendiente persiste 
 - Con una cuenta iniciada, puedo seguir un municipio y dejar de seguirlo.
 - Un extravío o hallazgo nuevo genera a lo sumo una alerta por evento y suscriptor existente al momento de publicarlo.
 - En condiciones normales, la alerta queda en la bandeja antes de 3 minutos. Si alertas se detiene y vuelve, el evento se procesa una sola vez desde la perspectiva del usuario.
+
+### 5.5 Contactar a quien publicó un reporte
+
+**Como** persona que encontró una mascota, **quiero** escribir a quien publicó un reporte sin pedirle un teléfono público **para** compartir detalles del avistamiento.
+
+- Inicio sesión, abro un extravío o hallazgo público y envío un mensaje de hasta 1000 caracteres.
+- Solo la cuenta que publicó el reporte y la cuenta que inició esa conversación pueden leer y responder. Otras cuentas reciben 404 al intentar acceder.
+- Cada participante ve la conversación en **Comunidad → Mensajes**. Abrir la página o pulsar **Actualizar mensajes** consulta los datos guardados; con la página visible se actualiza cada 30 segundos.
+- Los mensajes no disparan correo, SMS ni push. La entrega depende de que ambas personas consulten la bandeja web.
 
 ## 6. Del monolito a los servicios
 

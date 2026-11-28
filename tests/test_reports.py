@@ -12,7 +12,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.auth import get_actor_id
 from app.core.db import Base, get_session
 from app.reports import service
-from app.reports.models import FoundPetReport, MissingPetReport, OutboxEventV1, PendingReportEvent
+from app.reports.models import FoundPetReport, MissingPetReport, OutboxEventV1, PendingReportEvent, ReportConversation, ReportMessage
 from app.reports.router import router
 from app.web.router import router as web_router
 
@@ -42,6 +42,8 @@ def setup(monkeypatch):
             PendingReportEvent.__table__,
             FoundPetReport.__table__,
             OutboxEventV1.__table__,
+            ReportConversation.__table__,
+            ReportMessage.__table__,
         ],
     )
     factory = sessionmaker(engine)
@@ -333,3 +335,43 @@ def test_found_event_failure_rolls_back_report(setup, monkeypatch):
     assert response.status_code == 500
     assert count(factory, FoundPetReport) == 0
     assert count(factory, OutboxEventV1) == 0
+
+
+def test_private_conversation_between_reporter_and_finder(setup):
+    client, factory = setup
+    report = client.post(
+        "/api/reportes/extravios", json=payload(),
+        headers={"Idempotency-Key": "contacto-luna"},
+    ).json()
+    url = f'/api/reportes/extravios/{report["id"]}/conversaciones'
+    assert client.post(url, json={"body": "Yo la vi"}).status_code == 403
+
+    finder = uuid4()
+    client.app.dependency_overrides[get_actor_id] = lambda: finder
+    first = client.post(url, json={"body": "  La vi cerca del parque  "})
+    assert first.status_code == 201, first.text
+    conversation_id = first.json()["id"]
+    assert first.json()["role"] == "persona que ayuda"
+    assert client.post(url, json={"body": "Más detalles"}).json()["id"] == conversation_id
+    assert client.post(url, json={"body": "   "}).status_code == 422
+    messages_url = f"/api/reportes/conversaciones/{conversation_id}/mensajes"
+    messages = client.get(messages_url).json()
+    assert [message["body"] for message in messages] == ["La vi cerca del parque", "Más detalles"]
+    assert all(message["sender_is_me"] for message in messages)
+
+    stranger = uuid4()
+    client.app.dependency_overrides[get_actor_id] = lambda: stranger
+    assert client.get(messages_url).status_code == 404
+    assert client.post(messages_url, json={"body": "Hola"}).status_code == 404
+    assert client.get("/api/reportes/conversaciones").json() == []
+
+    client.app.dependency_overrides[get_actor_id] = lambda: DEMO_USER_ID
+    inbox = client.get("/api/reportes/conversaciones").json()
+    assert len(inbox) == 1 and inbox[0]["report_title"] == "Luna"
+    reply = client.post(messages_url, json={"body": "Gracias, voy hacia allá"})
+    assert reply.status_code == 201 and reply.json()["sender_is_me"] is True
+    assert count(factory, ReportConversation) == 1
+    assert count(factory, ReportMessage) == 3
+
+    client.app.dependency_overrides[get_actor_id] = lambda: finder
+    assert client.get(messages_url).json()[-1]["sender_is_me"] is False

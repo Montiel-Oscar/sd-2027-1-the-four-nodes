@@ -2,6 +2,7 @@
 const statusBox = document.querySelector("#status");
 const form = document.querySelector("#publish-form");
 let shareUrl = location.href;
+let reportInfo = null;
 const labels = {name:"Nombre",species:"Especie",traits:"Características",seen_at:"Fecha y hora",municipality:"Municipio",neighborhood:"Colonia",landmark:"Referencia",public_phone:"Teléfono",pet:"Mascota"};
 function say(message) { statusBox.textContent = message; }
 async function readResponse(response) {
@@ -63,6 +64,7 @@ if (form) {
       const id = location.pathname.split("/").filter(Boolean).at(-1);
       const kind = location.pathname.includes("/hallazgos/") ? "hallazgos" : "extravios";
       const data = await readResponse(await fetch(`/api/reportes/${kind}/${encodeURIComponent(id)}`));
+      reportInfo = {kind, id};
       document.querySelector("#pet-name").textContent = data.pet ? `${data.pet.name} está en búsqueda` : "Mascota encontrada";
       document.title = data.pet ? `${data.pet.name} · Reporte de extravío` : "Hallazgo · The Four Nodes";
       document.querySelector("#pet-species").textContent = data.pet?.species || "Hallazgo";
@@ -83,6 +85,25 @@ if (form) {
     } catch (error) { say(error instanceof TypeError ? "No pudimos cargar el reporte. Comprueba tu conexión y recarga la página." : error.message); }
   })();
 }
+document.querySelector("#contact-form")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const contactForm = event.currentTarget;
+  const message = contactForm.elements.body.value.trim();
+  const result = document.querySelector("#contact-status");
+  if (!message || !reportInfo) return;
+  const button = contactForm.querySelector("button[type=submit]");
+  button.disabled = true;
+  result.textContent = "Enviando…";
+  try {
+    await window.FourNodes.request(`/api/reportes/${reportInfo.kind}/${encodeURIComponent(reportInfo.id)}/conversaciones`, {
+      private:true, method:"POST", body:JSON.stringify({body:message})
+    });
+    contactForm.reset();
+    result.textContent = "Mensaje enviado. Consulta las respuestas en Comunidad → Mensajes.";
+  } catch (error) {
+    result.textContent = error instanceof TypeError ? "No pudimos conectar. Conservamos tu mensaje; vuelve a intentar." : error.message;
+  } finally { button.disabled = false; }
+});
 document.querySelector("#copy-link")?.addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(shareUrl); say("Enlace copiado."); }
   catch { say(`Copia este enlace: ${shareUrl}`); }

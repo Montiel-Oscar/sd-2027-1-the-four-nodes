@@ -44,3 +44,14 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;background:#eef3f0;co
 #report-map-section{margin-top:24px}
 .map-credit{font-size:10px!important}
 @media(max-width:580px){.location-map{height:280px}#report-map{height:320px}}
+
+/* Conversaciones privadas por reporte. */
+#private-contact{margin-top:28px;padding:20px;background:#f2faf6;border:1px solid #c9e5d6;border-radius:12px}
+#private-contact>p,#messages>p{font-size:13px;color:#405f52}
+#private-contact form{display:grid;gap:10px}
+#private-contact textarea,#reply-form textarea{min-height:90px}
+#private-contact a{color:#08765d;text-decoration:underline}
+#contact-status,#reply-status{font-size:13px;color:#305a46}
+#thread-messages article{margin:12px 0;padding:14px;background:#f5faf7}
+#thread-messages p{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}
+#thread-messages small{color:#627b6e}

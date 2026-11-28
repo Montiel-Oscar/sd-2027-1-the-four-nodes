@@ -125,16 +125,74 @@ async function inbox() {
   } catch (error) { if (generation === sessionGeneration) status("#inbox-status", message(error)); }
   finally { inboxBusy = false; }
 }
+let activeConversation = null;
+async function openConversation(id, title) {
+  const generation = sessionGeneration;
+  try {
+    const rows = await api.request(`/api/reportes/conversaciones/${encodeURIComponent(id)}/mensajes`, {private:true});
+    if (generation !== sessionGeneration) return;
+    activeConversation = id;
+    $("#conversation-thread").hidden = false;
+    $("#thread-title").textContent = title;
+    $("#thread-messages").replaceChildren();
+    for (const row of rows) {
+      const item = document.createElement("article");
+      item.append(node("strong", row.sender_is_me ? "Tú" : "La otra persona"),
+        node("p", row.body), node("small", new Date(row.created_at).toLocaleString("es-MX")));
+      $("#thread-messages").append(item);
+    }
+    status("#reply-status", "");
+  } catch (error) { if (generation === sessionGeneration) status("#messages-status", message(error)); }
+}
+async function conversations() {
+  if (!api.token()) return;
+  const generation = sessionGeneration;
+  try {
+    const rows = await api.request("/api/reportes/conversaciones", {private:true});
+    if (generation !== sessionGeneration) return;
+    $("#conversations-list").replaceChildren();
+    for (const row of rows) {
+      const card = document.createElement("article");
+      const title = `${row.report_kind === "extravios" ? "Extravío" : "Hallazgo"}: ${row.report_title}`;
+      const button = node("button", "Abrir conversación");
+      button.type = "button";
+      button.addEventListener("click", () => openConversation(row.id, title));
+      card.append(reportLink(row.report_kind, row.report_id, title),
+        node("p", `Participas como ${row.role}. Último mensaje: ${new Date(row.last_message_at).toLocaleString("es-MX")}`), button);
+      $("#conversations-list").append(card);
+    }
+    status("#messages-status", rows.length ? `${rows.length} conversaciones. Abre una para leer y responder.` : "Todavía no tienes mensajes.");
+    if (activeConversation && rows.some(row => row.id === activeConversation)) {
+      const current = rows.find(row => row.id === activeConversation);
+      await openConversation(activeConversation, `${current.report_kind === "extravios" ? "Extravío" : "Hallazgo"}: ${current.report_title}`);
+    }
+  } catch (error) { if (generation === sessionGeneration) status("#messages-status", message(error)); }
+}
+wireForm("#reply-form", "#reply-status", async form => {
+  if (!activeConversation) throw new Error("Abre una conversación primero.");
+  await api.request(`/api/reportes/conversaciones/${encodeURIComponent(activeConversation)}/mensajes`, {
+    private:true, method:"POST", body:JSON.stringify({body:form.elements.body.value})
+  });
+  form.reset();
+  await conversations();
+  status("#reply-status", "Respuesta enviada.");
+});
 function sessionChanged() {
   sessionGeneration++;
   $("#subscriptions").replaceChildren(); $("#inbox").replaceChildren();
+  activeConversation = null;
+  $("#conversations-list").replaceChildren(); $("#thread-messages").replaceChildren();
+  $("#conversation-thread").hidden = true;
+  status("#messages-status", api.token() ? "Cargando conversaciones…" : "Inicia sesión para consultar tus mensajes.");
   status("#subscriptions-status", api.token() ? "Cargando municipios…" : "Inicia sesión para seguir municipios.");
   status("#inbox-status", api.token() ? "Cargando bandeja…" : "Inicia sesión para consultar tus alertas.");
-  subscriptions(); inbox();
+  subscriptions(); inbox(); conversations();
 }
 window.addEventListener("sessionchange", sessionChanged);
 $("#refresh-alerts").addEventListener("click", inbox);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) inbox(); });
+$("#refresh-messages").addEventListener("click", conversations);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { inbox(); conversations(); } });
 setInterval(inbox, 30000);
+setInterval(() => { if (!document.hidden) conversations(); }, 30000);
 sessionChanged();
 browse();

@@ -40,7 +40,7 @@ Las tres ramas permanentes son `main` (entrega final), `01-monolito` (primera en
 
 ## Versión final distribuida: `main` y `02-separacion`
 
-La aplicación final permite marcar en un mapa la ubicación aproximada de extravíos y hallazgos, además de escribir municipio, colonia y referencia. Tiene tres servicios FastAPI: identidad, reportes (dos réplicas) y alertas. Traefik publica únicamente `http://localhost:8000`; PostgreSQL guarda tres bases lógicas en una instancia. El [diagrama de arquitectura](docs/ARQUITECTURA_FINAL.md), el [PRD](docs/PRD.md), los [resultados medidos](docs/RESULTADOS_FINALES.md) y la [rúbrica](RUBRICA.md) documentan la entrega.
+La aplicación final permite marcar en un mapa la ubicación aproximada de extravíos y hallazgos, además de escribir municipio, colonia y referencia. Quien encuentre una mascota puede enviar un mensaje privado desde el enlace del reporte; quien lo publicó puede leerlo y responder en **Comunidad → Mensajes**, sin publicar su teléfono. Tiene tres servicios FastAPI: identidad, reportes (dos réplicas) y alertas. Traefik publica únicamente `http://localhost:8000`; PostgreSQL guarda tres bases lógicas en una instancia. El [diagrama de arquitectura](docs/ARQUITECTURA_FINAL.md), el [PRD](docs/PRD.md), los [resultados medidos](docs/RESULTADOS_FINALES.md) y la [rúbrica](RUBRICA.md) documentan la entrega.
 
 El [mapa y su migración](docs/MAPA.md) guardan coordenadas para reportes nuevos y muestran un punto rojo con un círculo de 3 km en el enlace público. Las alertas siguen filtradas por municipio.
 
@@ -57,14 +57,17 @@ python3 scripts/verify_gateway.py
 
 Abrir [la aplicación](http://localhost:8000/), [la comunidad](http://localhost:8000/comunidad) o [la API de reportes](http://localhost:8000/docs). `setup_env.py` crea las claves locales en `.env` si faltan; conserva las existentes para mantener cuentas y volumen. `.env` está ignorado por Git. Si se usó una versión anterior, `docker compose down --remove-orphans` antes de iniciar conserva el volumen. Para detener: `docker compose down`. Sólo Traefik publica un puerto al host.
 
+**Probar el contacto sin teléfono:** crea dos cuentas. Con A publica un extravío y deja desmarcada la opción de mostrar teléfono. Con B abre el enlace público, entra en la misma pestaña y usa **Enviar mensaje privado**. Vuelve a A, abre `/comunidad#messages`, pulsa **Actualizar mensajes**, abre la conversación y responde. En B, entra a **Mensajes** para leer la respuesta. Los mensajes se guardan en la base de reportes y solo los ven esas dos cuentas. La bandeja se consulta al abrirla y cada 30 segundos mientras la página está visible; no hay correo, SMS ni notificaciones push.
+
 ### Pruebas
 
 ```bash
 docker compose run --rm --volume "$PWD:/workspace" reportes_a sh -c "pip install -q '.[dev]' && pytest -q"
+python3 scripts/smoke_contact.py
 python3 scripts/resilience_20_subscribers.py --subscribers 20 --trials 3 --timeout 150 --with-faults
 ```
 
-La suite Python pasó **39 pruebas**. El recorrido HTTP, el balanceo con una réplica detenida y la demo real de dos cuentas en Chrome pasaron. En tres ensayos locales de 20 suscriptores, los 20 recibieron una sola alerta por reporte; el máximo observado hasta consultar todas las bandejas fue **10.307 s**. La prueba de caída de `alertas` mantuvo la publicación y entregó la alerta tras reiniciar. Con PostgreSQL detenido, una nueva publicación no se confirmó y el reporte fallido no apareció tras la recuperación. Estos resultados son locales y no garantizan disponibilidad ante caída de la instancia de PostgreSQL.
+La suite Python pasó **40 pruebas**. El recorrido HTTP, el balanceo con una réplica detenida y la demo real de dos cuentas en Chrome pasaron. En tres ensayos locales de 20 suscriptores, los 20 recibieron una sola alerta por reporte; el máximo observado hasta consultar todas las bandejas fue **10.307 s**. La prueba de caída de `alertas` mantuvo la publicación y entregó la alerta tras reiniciar. Con PostgreSQL detenido, una nueva publicación no se confirmó y el reporte fallido no apareció tras la recuperación. Estos resultados son locales y no garantizan disponibilidad ante caída de la instancia de PostgreSQL.
 
 ### Entrega y presentación
 
